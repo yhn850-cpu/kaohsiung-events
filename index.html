@@ -460,7 +460,8 @@
     { id:"2025-11-doraemon", year:2025, month:11, monthLabel:"11月", name:"100% 哆啦A夢特展", kind:"IP 特展", places:["science_museum"] },
     { id:"2025-12-newyear-2026", year:2025, month:12, monthLabel:"12月", name:"2026 跨年晚會「雄嗨趴」", kind:"節慶晚會", places:["dream_mall"] },
 
-    { id:"2026-01-superjunior-ss10", year:2026, month:1, monthLabel:"01月", name:"Super Junior SS10（1/23-25）", kind:"國際演唱會", places:["arena"] },
+    { id:"2026-01-superjunior-ss10", year:2026, month:1, monthLabel:"01月", name:"Super Junior SS10（1/23-25）", kind:"國際演唱會", places:["arena"] ,
+    : "2026高雄跨年「雄嗨趴」在夢時代登場，由告五人、八三夭壓軸，陳其邁市長與球后戴資穎共同倒數迎接240秒煙火。"},
   ];
 
   // ========= 狀態 =========
@@ -581,12 +582,14 @@
           <div class="photo-row" id="photos-${ev.id}">
             ${placeholderThumbs}
           </div>
-          <div class="missing-box">
-            <div>📌 <b>eventId：</b><span class="mono">${ev.id}</span></div>
-            <div>📁 <b>照片放這裡：</b><span class="mono">${folder}</span></div>
-          </div>
-        </article>
-      `;
+          <div class="missing-box" style="border-style: solid; background: #fffaf0; border-color: #d2b48c; padding: 12px; border-radius: 8px;">
+  <div style="font-weight: 800; color: #8b4513; margin-bottom: 4px; font-size: 13px; display: flex; align-items: center; gap: 5px;">
+    <span>✨</span> 活動亮點紀錄
+  </div>
+  <div style="line-height: 1.6; color: #444; font-size: 14px; text-align: justify;">
+    ${ev.desc || "活動詳情整理中，敬請期待市長當天的精彩紀錄！"}
+  </div>
+</div>      `;
     }).join("");
 
     list.forEach(async ev=>{
@@ -672,4 +675,5 @@
 </script>
 </body>
 </html>
+
 
