@@ -905,7 +905,22 @@
 
     let activeYear = "all";
     let activeLocation = null;
+function getAvailableYears() {
+  // 依目前地點範圍計算「有哪些年份真的有活動」
+  let list = EVENTS;
+  if (activePlace !== "all") {
+    list = list.filter(e => e.places.includes(activePlace));
+  }
+  return Array.from(new Set(list.map(e => e.year))).sort();
+}
 
+function ensureActiveYearValid() {
+  const years = getAvailableYears();
+  if (activeYear !== "all" && !years.includes(Number(activeYear))) {
+    activeYear = "all";
+  }
+}
+    
     const locationNameEl = document.getElementById("locationName");
     const locationTypeEl = document.getElementById("locationType");
     const eventListEl = document.getElementById("eventList");
@@ -1039,5 +1054,6 @@ PLACES.filter(p => usedPlaceIds.has(p.id)).forEach(p => {
   </script>
 </body>
 </html>
+
 
 
