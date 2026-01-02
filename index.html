@@ -100,7 +100,6 @@
 
     .row{ margin-top:10px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
 
-
     /* 縮圖按鈕（可點擊放大） */
     .thumb-btn{
       appearance:none;
@@ -350,6 +349,10 @@
         <div class="scope-sub" id="scopeSub">目前顯示：全部年份 · 全部活動</div>
 
         
+        <div class="row">
+          <span class="select-label">地點</span>
+          <select id="placeSelect" class="select" aria-label="選擇地點"></select>
+        </div>
 <div class="row" id="yearFilters"></div>
 
         <div class="row">
@@ -737,7 +740,6 @@ eventListEl.addEventListener("click", (e)=>{
 </script>
 </body>
 </html>
-
 
 
 
