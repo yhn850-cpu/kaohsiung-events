@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>高雄 · 陳其邁市長任內活動地圖（2020–2026/01/01）</title>
 
-  <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -347,11 +346,7 @@
       <aside class="sidebar">
         <div class="scope-title" id="scopeTitle">全部地點</div>
         <div class="scope-sub" id="scopeSub">目前顯示：全部年份 · 全部活動</div>
-        
-        <div class="row">
-          <span class="select-label">地點</span>
-          <select id="placeSelect" class="select" aria-label="選擇地點"></select>
-        </div>
+
         <div class="row" id="yearFilters"></div>
 
         <div class="row">
@@ -374,7 +369,6 @@
   </div>
 
 
-  <!-- Lightbox：點縮圖放大 + 顯示來源網址 -->
   <div class="lightbox" id="lightbox" aria-hidden="true">
     <div class="lightbox-backdrop" id="lightboxBackdrop" data-close="1"></div>
     <div class="lightbox-panel" role="dialog" aria-modal="true" aria-label="圖片放大檢視">
@@ -479,33 +473,27 @@
   const yearFiltersEl= document.getElementById("yearFilters");
   const eventListEl  = document.getElementById("eventList");
 
-  const placeSelectEl = document.getElementById("placeSelect");
-
   // =========（可選）圖片來源網址對照表 =========
-  // 如果你擔心「偷圖」爭議，可以把每張圖片的原始來源網址填在這裡。
-  // key：圖片在網站上的路徑（例如 "images/2026/2026-01-newyear-dawn/01.jpg"）
-  // value：原始來源網址（例如 "https://example.com/original-post"）
- const PHOTO_SOURCES = {
-  "images/2025/2025-12-newyear-2026/01.jpg": "https://taidaily.com/2026/01/01/563572/",
-  "images/2025/2025-12-newyear-2026/02.jpg": "https://taidaily.com/2026/01/01/563572/",
-  "images/2025/2025-12-newyear-2026/03.jpg": "https://taidaily.com/2026/01/01/563572/",
-  "images/2025/2025-12-newyear-2026/04.jpg": "https://taidaily.com/2026/01/01/563572/",
-};
+  const PHOTO_SOURCES = {
+    "images/2025/2025-12-newyear-2026/01.jpg": "https://taidaily.com/2026/01/01/563572/",
+    "images/2025/2025-12-newyear-2026/02.jpg": "https://taidaily.com/2026/01/01/563572/",
+    "images/2025/2025-12-newyear-2026/03.jpg": "https://taidaily.com/2026/01/01/563572/",
+    "images/2025/2025-12-newyear-2026/04.jpg": "https://taidaily.com/2026/01/01/563572/",
+  };
 
-  // ========= 年份：依地點動態產生（某地點某年沒活動就不顯示該年） =========
   function getAvailableYears(){
     let list = EVENTS;
     if (activePlace !== "all") list = list.filter(e => e.places.includes(activePlace));
     return Array.from(new Set(list.map(e => e.year))).sort((a,b)=>a-b);
   }
+
   function ensureActiveYearValid(){
     const years = getAvailableYears();
     if (activeYear !== "all" && !years.includes(Number(activeYear))){
       activeYear = "all";
     }
+  }
 
-  // ========= 地點下拉選單（避免一次顯示太多地點造成頁面變長） =========
- }
   function renderYearFilters(){
     ensureActiveYearValid();
     const years = getAvailableYears();
@@ -526,8 +514,6 @@
     });
   }
 
-  // ========= 照片規則：你上傳照片到指定資料夾就會自己顯示 =========
-  // 會自動嘗試載入 images/{year}/{eventId}/01.jpg ~ 06.jpg
   function expectedFolder(ev){
     return `images/${ev.year}/${ev.id}/`;
   }
@@ -537,7 +523,7 @@
       const img = new Image();
       img.onload = ()=> resolve(url);
       img.onerror= ()=> resolve(null);
-      img.src = url + `?v=${Date.now()}`; // 避免快取卡住（上傳後立刻刷新比較準）
+      img.src = url + `?v=${Date.now()}`;
     });
   }
 
@@ -548,27 +534,22 @@
       const n = String(i).padStart(2,"0");
       candidates.push(`${base}${n}.jpg`);
     }
-
     const results = await Promise.all(candidates.map(tryLoadImage));
     return results.filter(Boolean);
   }
 
-  // ========= 右側列表 =========
   function renderEvents(){
     const year = (activeYear === "all") ? null : Number(activeYear);
-
     let list = EVENTS.slice();
     if (year) list = list.filter(e => e.year === year);
     if (activePlace !== "all") list = list.filter(e => e.places.includes(activePlace));
 
-    // 新到舊
     list.sort((a,b)=>{
       if (a.year !== b.year) return b.year - a.year;
       if (a.month !== b.month) return b.month - a.month;
       return a.name.localeCompare(b.name, "zh-Hant");
     });
 
-    // 更新標題
     if (activePlace === "all"){
       scopeTitleEl.textContent = "全部地點";
     } else {
@@ -584,8 +565,6 @@
     eventListEl.innerHTML = list.map(ev=>{
       const placeNames = ev.places.map(pid => placeById[pid]?.name || pid).join("、");
       const folder = expectedFolder(ev);
-
-      // 先放 placeholder，等照片真的存在再換成照片
       const placeholderThumbs = Array.from({length:2}).map((_,idx)=>{
         return `<div class="thumb placeholder" id="ph-${ev.id}-${idx}"></div>`;
       }).join("");
@@ -596,36 +575,25 @@
             <span class="event-date">${ev.year} 年 ${ev.monthLabel}</span>
             <span class="event-name">${ev.name}</span>
           </div>
-
           <div class="event-meta">
             <span class="tag"><span class="tag-dot"></span><span>${ev.kind}</span></span>
             <span class="tag">${placeNames}</span>
           </div>
-
           <div class="photo-row" id="photos-${ev.id}">
             ${placeholderThumbs}
           </div>
-
           <div class="missing-box">
             <div>📌 <b>eventId：</b><span class="mono">${ev.id}</span></div>
             <div>📁 <b>照片放這裡：</b><span class="mono">${folder}</span></div>
-            <div>🖼 檔名建議：<span class="mono">01.jpg</span>、<span class="mono">02.jpg</span>、<span class="mono">03.jpg</span>…（最多自動抓到 06.jpg）</div>
           </div>
         </article>
       `;
     }).join("");
 
-    // 非同步載入照片（有就顯示，沒有就保留 placeholder）
     list.forEach(async ev=>{
       const urls = await loadEventPhotos(ev);
       const container = document.getElementById(`photos-${ev.id}`);
-      if (!container) return;
-
-      if (!urls.length){
-        // 沒照片：保留 placeholder
-        return;
-      }
-
+      if (!container || !urls.length) return;
       container.innerHTML = urls.map(url=>{
         const src = PHOTO_SOURCES[url] || url;
         return `<button class="thumb thumb-btn" type="button" aria-label="放大圖片" data-img="${url}" data-src="${src}" style="background-image:url('${url}')"></button>`;
@@ -633,7 +601,7 @@
     });
   }
 
-  // ========= 縮圖點擊：放大檢視（含來源網址） =========
+  // ========= Lightbox =========
   const lightboxEl = document.getElementById("lightbox");
   const lightboxImg = document.getElementById("lightboxImg");
   const lightboxPath = document.getElementById("lightboxPath");
@@ -646,108 +614,62 @@
     lightboxPath.textContent = imgUrl;
     lightboxSrc.textContent = srcUrl || imgUrl;
     lightboxSrc.href = srcUrl || imgUrl;
-
     lightboxEl.classList.add("open");
-    lightboxEl.setAttribute("aria-hidden","false");
     document.body.style.overflow = "hidden";
   }
 
   function closeLightbox(){
     lightboxEl.classList.remove("open");
-    lightboxEl.setAttribute("aria-hidden","true");
-    document.body.style.overflow = "hidden";
+    document.body.style.overflow = "";
     lightboxImg.src = "";
   }
 
-// 用事件委派，避免每次重繪都綁一堆 listener
-eventListEl.addEventListener("click", (e)=>{
-  const btn = e.target.closest(".thumb-btn");
-  if (!btn) return;
-
-  const imgUrl = btn.dataset.img;
-  const srcUrl = btn.dataset.src || btn.dataset.img;
-
-  if (!imgUrl) return;
-  openLightbox(imgUrl, srcUrl);
-});
+  eventListEl.addEventListener("click", (e)=>{
+    const btn = e.target.closest(".thumb-btn");
+    if (!btn) return;
+    openLightbox(btn.dataset.img, btn.dataset.src);
+  });
 
   lightboxClose.addEventListener("click", closeLightbox);
   lightboxBackdrop.addEventListener("click", closeLightbox);
-  document.addEventListener("keydown", (e)=>{
-    if (e.key === "Escape" && lightboxEl.classList.contains("open")){
-      closeLightbox();
-    }
-  });
-eventListEl.addEventListener("click", (e)=>{
-  const btn = e.target.closest(".thumb-btn");
-  if (!btn) return;
 
-  console.log("IMG:", btn.dataset.img, "SRC:", btn.dataset.src);
-
-  const imgUrl = btn.dataset.img;
-  const srcUrl = btn.dataset.src || btn.dataset.img;
-  if (!imgUrl) return;
-  openLightbox(imgUrl, srcUrl);
-});
-
-  // ========= 地圖（圖釘標記） =========
+  // ========= 地圖 =========
   const map = L.map("map").setView([22.63, 120.30], 12);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19,
-    attribution: "&copy; OpenStreetMap 貢獻者"
+    maxZoom: 19, attribution: "&copy; OpenStreetMap 貢獻者"
   }).addTo(map);
 
   const PIN_ICON = L.divIcon({
     className: "pin-icon",
     html: `
-      <svg width="28" height="44" viewBox="0 0 28 44" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="M14 43C14 43 3 28.7 3 18C3 10.8 8.1 5 14 5C19.9 5 25 10.8 25 18C25 28.7 14 43 14 43Z"
-              fill="#B95756" stroke="#8F4A49" stroke-width="2"/>
+      <svg width="28" height="44" viewBox="0 0 28 44" xmlns="http://www.w3.org/2000/svg">
+        <path d="M14 43C14 43 3 28.7 3 18C3 10.8 8.1 5 14 5C19.9 5 25 10.8 25 18C25 28.7 14 43 14 43Z" fill="#B95756" stroke="#8F4A49" stroke-width="2"/>
         <circle cx="14" cy="18" r="6" fill="#f4f1ec" stroke="#9a8c98" stroke-width="2"/>
       </svg>
     `,
-    iconSize: [28, 44],
-    iconAnchor: [14, 44],
-    tooltipAnchor: [0, -34]
+    iconSize: [28, 44], iconAnchor: [14, 44]
   });
 
-  // 只顯示有被活動使用到的地點
   const usedPlaceIds = new Set(EVENTS.flatMap(e => e.places));
   PLACES.filter(p => usedPlaceIds.has(p.id)).forEach(p=>{
     const marker = L.marker([p.lat, p.lng], { icon: PIN_ICON }).addTo(map);
     marker.bindTooltip(p.name, { direction:"top" });
-
     marker.on("click", ()=>{
       activePlace = p.id;
-      placeSelectEl.value = p.id;
-      renderYearFilters(); // ★ 地點切換後：年份選項動態更新（只留有活動的年份）
+      renderYearFilters();
       renderEvents();
     });
   });
 
   document.getElementById("clearPlace").addEventListener("click", ()=>{
     activePlace = "all";
-    placeSelectEl.value = "all";
     renderYearFilters();
     renderEvents();
   });
 
   // init
-  renderPlaceSelect();
   renderYearFilters();
   renderEvents();
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
