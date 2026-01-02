@@ -2,396 +2,271 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
-  <title>高雄 · 陳其邁市長任內活動地圖</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>高雄 · 陳其邁市長任內活動地圖（2020–2026/01/01）</title>
 
-  <!-- Leaflet 地圖套件 -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-    crossorigin=""
-  />
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin=""
-  ></script>
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <style>
-    /* 地圖圖釘（SVG） */
-.pin-icon {
-  background: transparent;
-  border: none;
-}
-.pin-icon svg {
-  filter: drop-shadow(0 10px 10px rgba(64,59,51,0.25));
-}
-
-    * {
-      box-sizing: border-box;
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family:"AR 浪漫明朝體","Noto Serif TC","Noto Sans TC",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",serif;
+      background:
+        radial-gradient(circle at top left, rgba(220,205,196,0.65), transparent 55%),
+        radial-gradient(circle at bottom right, rgba(182,196,201,0.75), #f4f1ec);
+      color:#3f3f46;
     }
 
-    body {
-      margin: 0;
-      font-family: "AR 浪漫明朝體", "Noto Serif TC", "Noto Sans TC",
-        system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", serif;
-      background: radial-gradient(
-          circle at top left,
-          rgba(220, 205, 196, 0.6),
-          transparent 55%
-        ),
-        radial-gradient(
-          circle at bottom right,
-          rgba(182, 196, 201, 0.7),
-          #f4f1ec
-        );
-      color: #3f3f46;
+    .app{ min-height:100vh; display:flex; flex-direction:column; }
+
+    .header{
+      padding:10px 18px;
+      display:flex; align-items:center; justify-content:space-between;
+      border-bottom:1px solid rgba(148,133,121,0.4);
+      background: linear-gradient(to right, #d8c3a5, #e3d5ca, #c9ada7);
+      gap:10px;
+    }
+    .title{
+      display:flex; flex-direction:column; gap:3px;
+      min-width: 260px;
+    }
+    .title h1{
+      margin:0;
+      font-size:18px; font-weight:800; letter-spacing:.12em;
+      text-transform:uppercase;
+      color:#403b33;
+    }
+    .title .sub{
+      font-size:12px;
+      color:#5b5b63;
+    }
+    .badge{
+      font-size:11px;
+      padding:6px 12px;
+      border-radius:999px;
+      border:1px solid rgba(112,99,88,0.5);
+      background: rgba(244,241,236,0.75);
+      display:inline-flex; align-items:center; gap:8px;
+      color:#3f3f46; white-space:nowrap;
+    }
+    .badge-dot{
+      width:7px; height:7px; border-radius:999px;
+      background:#9a8c98;
+      box-shadow:0 0 0 3px rgba(154,140,152,0.35);
     }
 
-    a {
-      color: #9a8c98;
-      text-decoration: none;
+    .main{
+      flex:1;
+      display:grid;
+      grid-template-columns:minmax(0,1.35fr) minmax(0,1.65fr);
+      min-height:0;
     }
 
-    .app {
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
+    .map-wrapper{ padding:14px 14px 14px 18px; }
+    .map-card{
+      height:100%;
+      border-radius:18px;
+      overflow:hidden;
+      border:1px solid rgba(148,133,121,0.5);
+      box-shadow:0 20px 35px rgba(64,59,51,0.25);
+    }
+    #map{ height:100%; width:100%; }
+
+    .sidebar{
+      padding:14px 18px 12px;
+      display:flex; flex-direction:column;
+      border-left:1px solid rgba(148,133,121,0.45);
+      background: linear-gradient(to bottom, rgba(244,241,236,0.85), rgba(227,213,202,0.85));
+      min-height:0;
     }
 
-    /* 上方標題列（莫蘭迪奶茶＋灰粉） */
-    .header {
-      padding: 10px 18px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid rgba(148, 133, 121, 0.4);
-      background: linear-gradient(
-        to right,
-        #d8c3a5,
-        #e3d5ca,
-        #c9ada7
-      );
+    .scope-title{
+      font-size:17px; font-weight:800; color:#5e503f;
+      margin-bottom:2px;
+    }
+    .scope-sub{
+      font-size:13px; color:#6b7280;
+    }
+    .hint{
+      margin-top:8px;
+      font-size:12px; color:#78716c;
+      line-height:1.4;
     }
 
-    .header-left {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
+    .row{ margin-top:10px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+
+    /* 年份按鈕：清楚可讀、避免撞色 */
+    .pill{
+      font-size:11px;
+      padding:7px 12px;
+      border-radius:999px;
+      border:1px solid #c8b6a6;
+      background:#e3d5ca;
+      color:#1f2937;
+      cursor:pointer;
+      transition:transform .08s, border-color .18s, background .18s;
+    }
+    .pill:hover{ transform: translateY(-1px); border-color:#9a8c98; }
+    .pill.active{
+      background:#c9ada7;
+      border-color:#9a8c98;
+      color:#111827;
+      font-weight:900;
     }
 
-    .site-title {
-      font-size: 18px;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: #403b33;
+    .btn{
+      margin-left:auto;
+      font-size:11px;
+      padding:7px 10px;
+      border-radius:12px;
+      border:1px solid rgba(112,99,88,0.5);
+      background: rgba(244,241,236,0.9);
+      color:#403b33;
+      cursor:pointer;
     }
 
-    .site-subtitle {
-      font-size: 12px;
-      color: #5b5b63;
+    .event-list{
+      margin-top:10px;
+      flex:1;
+      overflow:auto;
+      padding-right:4px;
+      min-height:0;
     }
 
-    .badge {
-      font-size: 11px;
-      padding: 5px 11px;
-      border-radius: 999px;
-      border: 1px solid rgba(112, 99, 88, 0.5);
-      background: rgba(244, 241, 236, 0.75);
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      color: #3f3f46;
-      white-space: nowrap;
+    .event-card{
+      background:#fdfdfc;
+      border-radius:14px;
+      padding:10px 12px;
+      margin-bottom:10px;
+      border:1px solid rgba(200,182,166,0.9);
+      box-shadow:0 12px 25px rgba(64,59,51,0.12);
+    }
+    .event-header{ display:flex; align-items:baseline; gap:8px; margin-bottom:6px; flex-wrap:wrap; }
+    .event-date{
+      font-size:12px;
+      padding:2px 8px;
+      border-radius:999px;
+      background:#d8e2dc;
+      color:#344054;
+      border:1px solid #b5c3c7;
+      white-space:nowrap;
+    }
+    .event-name{ font-size:14px; font-weight:900; color:#3b3a3a; }
+
+    .event-meta{
+      display:flex; flex-wrap:wrap; gap:6px;
+      font-size:12px; color:#6b6b6b;
+      margin-bottom:8px;
+    }
+    .tag{
+      display:inline-flex; align-items:center; gap:6px;
+      padding:2px 8px;
+      border-radius:999px;
+      border:1px solid #c8b6a6;
+      font-size:11px;
+      background:#f4f1ec;
+    }
+    .tag-dot{ width:6px; height:6px; border-radius:999px; background:#9a8c98; }
+
+    .photo-row{
+      margin-top:6px;
+      display:grid;
+      grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+      gap:6px;
+    }
+    .thumb{
+      position:relative;
+      width:100%;
+      padding-bottom:65%;
+      border-radius:10px;
+      overflow:hidden;
+      border:1px solid rgba(148,133,121,0.85);
+      background-position:center;
+      background-size:cover;
+      background-repeat:no-repeat;
+      background-color: rgba(244,241,236,0.9);
+    }
+    .thumb.placeholder::after{
+      content:"尚未加入照片";
+      position:absolute; inset:0;
+      display:flex; align-items:center; justify-content:center;
+      font-size:11px;
+      color:#fdfdfc;
+      text-shadow:0 1px 3px rgba(0,0,0,0.8);
+      background: linear-gradient(to top, rgba(64,59,51,0.92), rgba(64,59,51,0.28));
     }
 
-    .badge-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 999px;
-      background: #9a8c98;
-      box-shadow: 0 0 0 3px rgba(154, 140, 152, 0.35);
+    .missing-box{
+      margin-top:9px;
+      padding:9px 10px;
+      border-radius:12px;
+      border:1px dashed rgba(154,140,152,0.8);
+      background: rgba(244,241,236,0.9);
+      color:#403b33;
+      font-size:12px;
+      line-height:1.45;
+      word-break:break-all;
+    }
+    .mono{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size:11px;
     }
 
-    /* 主體：左地圖右列表 */
-    .main {
-      flex: 1;
-      display: grid;
-      grid-template-columns: minmax(0, 1.35fr) minmax(0, 1.65fr);
-      min-height: 0;
+    /* 圖釘 icon */
+    .pin-icon{ background:transparent; border:none; }
+    .pin-icon svg{ filter: drop-shadow(0 10px 10px rgba(64,59,51,0.25)); }
+
+    .footer{
+      padding:8px 18px 10px;
+      font-size:11px;
+      color:#6b6b6b;
+      border-top:1px solid rgba(148,133,121,0.5);
+      background:#e3d5ca;
     }
 
-    #map {
-      height: 100%;
-      width: 100%;
-    }
-
-    .map-wrapper {
-      padding: 14px 14px 14px 18px;
-    }
-
-    .map-card {
-      height: 100%;
-      border-radius: 18px;
-      overflow: hidden;
-      border: 1px solid rgba(148, 133, 121, 0.5);
-      box-shadow: 0 20px 35px rgba(64, 59, 51, 0.25);
-    }
-
-    .sidebar {
-      padding: 14px 18px 12px;
-      display: flex;
-      flex-direction: column;
-      border-left: 1px solid rgba(148, 133, 121, 0.45);
-      background: linear-gradient(
-        to bottom,
-        rgba(244, 241, 236, 0.85),
-        rgba(227, 213, 202, 0.85)
-      );
-    }
-
-    .sidebar-header {
-      margin-bottom: 8px;
-    }
-
-    .location-name {
-      font-size: 17px;
-      font-weight: 700;
-      color: #5e503f;
-      margin-bottom: 2px;
-    }
-
-    .location-type {
-      font-size: 13px;
-      color: #6b7280;
-    }
-
-    .hint {
-      margin-top: 6px;
-      font-size: 12px;
-      color: #78716c;
-    }
-
-    .pill-row {
-      margin-top: 10px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
-    /* 年份選項：莫蘭迪淺色背景＋深色字，清楚可讀 */
-    .pill {
-      font-size: 11px;
-      padding: 5px 10px;
-      border-radius: 999px;
-      border: 1px solid #c8b6a6;
-      background: #e3d5ca;
-      color: #403b33;
-      cursor: pointer;
-      transition: background 0.18s, border-color 0.18s, color 0.18s,
-        transform 0.08s;
-    }
-
-    .pill:hover {
-      transform: translateY(-1px);
-      border-color: #9a8c98;
-    }
-
-    .pill.active {
-      background: #c9ada7;
-      border-color: #9a8c98;
-      color: #2f2f30;
-      font-weight: 600;
-    }
-
-    .event-list {
-      margin-top: 8px;
-      flex: 1;
-      overflow-y: auto;
-      padding-right: 4px;
-    }
-
-    .event-card {
-      background: #fdfdfc;
-      border-radius: 14px;
-      padding: 10px 12px;
-      margin-bottom: 10px;
-      border: 1px solid rgba(200, 182, 166, 0.9);
-      box-shadow: 0 12px 25px rgba(64, 59, 51, 0.12);
-    }
-
-    .event-header {
-      display: flex;
-      align-items: baseline;
-      gap: 6px;
-      margin-bottom: 4px;
-    }
-
-    .event-date {
-      font-size: 12px;
-      padding: 2px 8px;
-      border-radius: 999px;
-      background: #d8e2dc;
-      color: #344054;
-      border: 1px solid #b5c3c7;
-    }
-
-    .event-name {
-      font-size: 14px;
-      font-weight: 600;
-      color: #3b3a3a;
-    }
-
-    .event-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      font-size: 12px;
-      color: #6b6b6b;
-      margin-bottom: 6px;
-    }
-
-    .tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 2px 8px;
-      border-radius: 999px;
-      border: 1px solid #c8b6a6;
-      font-size: 11px;
-      background: #f4f1ec;
-    }
-
-    .tag-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 999px;
-      background: #9a8c98;
-    }
-
-    .photo-row {
-      margin-top: 6px;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(86px, 1fr));
-      gap: 6px;
-    }
-
-    .photo-thumb {
-      position: relative;
-      width: 100%;
-      padding-bottom: 65%;
-      border-radius: 10px;
-      overflow: hidden;
-      border: 1px solid rgba(148, 133, 121, 0.85);
-      background-position: center;
-      background-size: cover;
-      background-repeat: no-repeat;
-    }
-
-    .photo-thumb::after {
-      content: "點我換成活動照片";
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      color: #fdfdfc;
-      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-      background: linear-gradient(
-        to top,
-        rgba(64, 59, 51, 0.9),
-        rgba(64, 59, 51, 0.25)
-      );
-    }
-
-    .footer {
-      padding: 8px 18px 10px;
-      font-size: 11px;
-      color: #6b6b6b;
-      border-top: 1px solid rgba(148, 133, 121, 0.5);
-      background: #e3d5ca;
-    }
-
-    .marker-label {
-      font-size: 12px;
-      font-weight: 600;
-      font-family: "AR 浪漫明朝體", "Noto Serif TC", serif;
-      color: #403b33;
-    }
-
-    /* 手機 / 平板版型 */
-    @media (max-width: 960px) {
-      .header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 6px;
+    @media (max-width: 960px){
+      .header{ flex-direction:column; align-items:flex-start; }
+      .main{
+        grid-template-columns:1fr;
+        grid-template-rows:minmax(280px, 46vh) minmax(0, 54vh);
       }
-
-      .main {
-        grid-template-columns: 1fr;
-        grid-template-rows: minmax(260px, 46vh) minmax(0, 54vh);
-      }
-
-      .map-wrapper {
-        padding: 10px 12px 6px;
-      }
-
-      .sidebar {
-        border-left: none;
-        border-top: 1px solid rgba(148, 133, 121, 0.45);
-      }
-
-      .location-name {
-        font-size: 16px;
-      }
-
-      .event-card {
-        padding: 8px 10px;
-      }
+      .map-wrapper{ padding:10px 12px 6px; }
+      .sidebar{ border-left:none; border-top:1px solid rgba(148,133,121,0.45); }
     }
   </style>
 </head>
+
 <body>
   <div class="app">
-    <!-- 頂部標題列 -->
     <header class="header">
-      <div class="header-left">
-        <div class="site-title">KAOHSIUNG EVENTS MAP</div>
-        <div class="site-subtitle">
-          陳其邁市長任內 · 2020–2026 高雄重要活動、演唱會與 IP 展覽
-        </div>
+      <div class="title">
+        <h1>KAOHSIUNG EVENTS MAP</h1>
+        <div class="sub">陳其邁任內活動整理 · 2020–2026/01/01（可逐步補照片）</div>
       </div>
-      <div class="badge">
-        <span class="badge-dot"></span>
-        <span>互動地圖｜點地標看歷年活動</span>
-      </div>
+      <div class="badge"><span class="badge-dot"></span>點地圖圖釘 → 右側看該地點歷年活動</div>
     </header>
 
-    <!-- 主畫面 -->
     <div class="main">
       <div class="map-wrapper">
-        <div class="map-card">
-          <div id="map"></div>
-        </div>
+        <div class="map-card"><div id="map"></div></div>
       </div>
 
       <aside class="sidebar">
-        <div class="sidebar-header">
-          <div class="location-name" id="locationName">
-            請先點地圖上的地點標記
-          </div>
-          <div class="location-type" id="locationType">
-            愛河灣、駁二、高流、夢時代、世運、高雄巨蛋…等活動場地一覽
-          </div>
-          <div class="hint">
-            🔍 小技巧：可以先選年份，再點地圖上的地點，就會只顯示該年度的活動。
-          </div>
+        <div class="scope-title" id="scopeTitle">全部地點</div>
+        <div class="scope-sub" id="scopeSub">目前顯示：全部年份 · 全部活動</div>
 
-          <!-- 年份篩選 -->
-          <div class="pill-row" id="yearFilters"></div>
+        <div class="row" id="yearFilters"></div>
+
+        <div class="row">
+          <button class="btn" id="clearPlace">清除地點篩選（回到全部）</button>
+        </div>
+
+        <div class="hint">
+          📌 你還沒找照片也沒關係：每張卡片都會顯示 <b>eventId</b> 與「照片應該放的資料夾路徑」。<br/>
+          ✅ 之後你只要把照片上傳到：<span class="mono">images/年份/eventId/01.jpg</span>、<span class="mono">02.jpg</span>… 網站會自動顯示。
         </div>
 
         <div class="event-list" id="eventList"></div>
@@ -399,663 +274,281 @@
     </div>
 
     <footer class="footer">
-      活動資料依照 2020–2026/01/01 高雄市官方對外宣傳之主要活動整理：跨年、燈會、演唱會、
-      IP 展、親子觀光與節慶活動。<br />
-      地圖：OpenStreetMap + Leaflet。地點座標為近似位置，可依需求再微調。
+      照片規則：<span class="mono">images/2024/2024-01-winter-duck/01.jpg</span>、<span class="mono">02.jpg</span>…（英文檔名最穩）。<br/>
+      地圖：OpenStreetMap + Leaflet（座標為近似位置，可再微調）。
     </footer>
   </div>
 
-  <script>
-    // ========= 1. 活動資料 =========
-    // 完整依照你提供的表格，並按地點整理
-    const locations = [
-      {
-        id: "meinong",
-        name: "美濃客家文物館",
-        type: "客庄景點・民俗文化活動場地",
-        lat: 22.9005,
-        lng: 120.542,
-        events: [
-          {
-            year: 2020,
-            month: "10月",
-            name: "好客旅遊去",
-            kind: "民俗文化",
-            photos: []
-          }
-        ]
-      },
-      {
-        id: "love_river_bay",
-        name: "愛河灣",
-        type: "水岸景觀・大型活動主場地",
-        lat: 22.6178,
-        lng: 120.2889,
-        events: [
-          {
-            year: 2020,
-            month: "12月",
-            name: "跨百光年跨年晚會",
-            kind: "節慶（市長首場跨年）",
-            photos: []
-          },
-          {
-            year: 2021,
-            month: "05月",
-            name: "高雄海洋派對",
-            kind: "水域休閒",
-            photos: []
-          },
-          {
-            year: 2022,
-            month: "02月",
-            name: "2022 台灣燈會（雙主場之一）",
-            kind: "國際級節慶",
-            photos: []
-          },
-          {
-            year: 2022,
-            month: "08月",
-            name: "台灣文博會（聊療漂漂河）",
-            kind: "藝文 IP",
-            photos: []
-          },
-          {
-            year: 2024,
-            month: "01月",
-            name: "冬日遊樂園（黃色小鴨回歸）",
-            kind: "國際亮點 IP",
-            photos: []
-          },
-          {
-            year: 2025,
-            month: "02月",
-            name: "冬日遊樂園（吉伊卡哇，與駁二串聯）",
-            kind: "療癒 IP 展",
-            photos: []
-          }
-        ]
-      },
-      {
-        id: "kaohsiung_music_center",
-        name: "高雄流行音樂中心（高流）",
-        type: "流行音樂場館・海音館",
-        lat: 22.6169,
-        lng: 120.2874,
-        events: [
-          {
-            year: 2020,
-            month: "12月",
-            name: "跨百光年跨年晚會（高流舞台）",
-            kind: "節慶晚會",
-            photos: []
-          },
-          {
-            year: 2021,
-            month: "12月",
-            name: "2022 高雄跨年（雙舞台之一）",
-            kind: "節慶晚會",
-            photos: []
-          },
-          {
-            year: 2022,
-            month: "08月",
-            name: "台灣文博會（部分展區）",
-            kind: "藝文 IP",
-            photos: []
-          },
-          {
-            year: 2022,
-            month: "10月",
-            name: "Takao Rock 打狗祭",
-            kind: "音樂祭",
-            photos: []
-          },
-          {
-            year: 2024,
-            month: "10月",
-            name: "打狗祭",
-            kind: "音樂祭",
-            photos: []
-          },
-          {
-            year: 2024,
-            month: "10月",
-            name: "萬聖節大遊行（與凹子底串聯）",
-            kind: "音樂 / 節慶",
-            photos: []
-          },
-          {
-            year: 2025,
-            month: "10月",
-            name: "2025 打狗祭",
-            kind: "音樂祭",
-            photos: []
-          },
-          {
-            year: 2026,
-            month: "01月",
-            name: "2026 元旦升旗 / 晨曦演唱會",
-            kind: "節慶",
-            photos: []
-          }
-        ]
-      },
-      {
-        id: "penglai",
-        name: "蓬萊商港區",
-        type: "港區・設計與跨年舞台",
-        lat: 22.6199,
-        lng: 120.2817,
-        events: [
-          {
-            year: 2020,
-            month: "12月",
-            name: "跨百光年跨年晚會（蓬萊商港舞台）",
-            kind: "節慶晚會",
-            photos: []
-          },
-          {
-            year: 2021,
-            month: "12月",
-            name: "2022 高雄跨年（蓬萊舞台）",
-            kind: "節慶晚會",
-            photos: []
-          },
-          {
-            year: 2022,
-            month: "10月",
-            name: "台灣設計展（設計中島）",
-            kind: "藝文設計",
-            photos: []
-          }
-        ]
-      },
-      {
-        id: "kaohsiung_harbor",
-        name: "高雄港灣",
-        type: "港灣景觀・國慶煙火施放地",
-        lat: 22.613,
-        lng: 120.285,
-        events: [
-          {
-            year: 2021,
-            month: "10月",
-            name: "國慶煙火在高雄",
-            kind: "國家慶典",
-            photos: []
-          }
-        ]
-      },
-      {
-        id: "love_river",
-        name: "愛河（龍舟賽區）",
-        type: "河畔・運動賽事場地",
-        lat: 22.6305,
-        lng: 120.2955,
-        events: [
-          {
-            year: 2021,
-            month: "11月",
-            name: "國慶龍舟嘉年華",
-            kind: "運動賽事",
-            photos: []
-          }
-        ]
-      },
-      {
-        id: "dream_mall",
-        name: "夢時代 / 時代大道",
-        type: "商圈・跨年與音樂祭場地",
-        lat: 22.59515,
-        lng: 120.30692,
-        events: [
-          {
-            year: 2022,
-            month: "12月",
-            name: "2023 跨年亞灣未來市",
-            kind: "節慶晚會",
-            photos: []
-          },
-          {
-            year: 2023,
-            month: "12月",
-            name: "2024 跨年晚會",
-            kind: "節慶晚會",
-            photos: []
-          },
-          {
-            year: 2024,
-            month: "03月",
-            name: "高雄櫻花季",
-            kind: "音樂祭 / 花季活動",
-            photos: []
-          },
-          {
-            year: 2024,
-            month: "07月",
-            name: "高雄啤酒音樂節",
-            kind: "商業祭典",
-            photos: []
-          },
-          {
-            year: 2025,
-            month: "03月",
-            name: "2025 高雄櫻花季",
-            kind: "音樂節",
-            photos: []
-          },
-          {
-            year: 2025,
-            month: "01月",
-            name: "2025 跨年晚會",
-            kind: "節慶晚會",
-            photos: []
-          },
-          {
-            year: 2025,
-            month: "12月",
-            name: "2026 跨年雄嗨趴（2天前暖身）",
-            kind: "節慶晚會",
-            photos: []
-          }
-        ]
-      },
-      {
-        id: "city_hall",
-        name: "高雄市政府（四維行政中心）",
-        type: "市府廣場・典禮",
-        lat: 22.623,
-        lng: 120.314,
-        events: [
-          {
-            year: 2025,
-            month: "01月",
-            name: "2025 元旦升旗（與夢時代跨年串聯）",
-            kind: "節慶晚會 / 典禮",
-            photos: []
-          }
-        ]
-      },
-      {
-        id: "arena",
-        name: "高雄巨蛋",
-        type: "室內體育館・大型演唱會場地",
-        lat: 22.6692,
-        lng: 120.3017,
-        events: [
-          {
-            year: 2023,
-            month: "02月",
-            name: "Westlife & Backstreet Boys",
-            kind: "國際演唱會",
-            photos: []
-          },
-          {
-            year: 2023,
-            month: "04月",
-            name: "張惠妹 ASMR 演唱會",
-            kind: "音樂慶典",
-            photos: []
-          },
-          {
-            year: 2026,
-            month: "01月",
-            name: "Super Junior SS10（預計）",
-            kind: "國際演唱會",
-            photos: []
-          }
-        ]
-      },
-      {
-        id: "world_games_stadium",
-        name: "世運主場館（國家體育場）",
-        type: "戶外體育場・國際演唱會場地",
-        lat: 22.7023,
-        lng: 120.2947,
-        events: [
-          {
-            year: 2023,
-            month: "02月",
-            name: "Westlife & Backstreet Boys（世運場）",
-            kind: "國際演唱會",
-            photos: []
-          },
-          {
-            year: 2023,
-            month: "03月",
-            name: "BLACKPINK / 五月天",
-            kind: "國際演唱會",
-            photos: []
-          },
-          {
-            year: 2023,
-            month: "11月",
-            name: "Coldplay 演唱會",
-            kind: "國際演唱會",
-            photos: []
-          },
-          {
-            year: 2024,
-            month: "02月",
-            name: "Ed Sheeran 紅髮艾德",
-            kind: "國際演唱會",
-            photos: []
-          },
-          {
-            year: 2024,
-            month: "03月",
-            name: "五月天（高雄櫻花季世運場）",
-            kind: "演唱會",
-            photos: []
-          },
-          {
-            year: 2024,
-            month: "04月",
-            name: "Golden Wave in Taiwan",
-            kind: "韓流演唱會",
-            photos: []
-          },
-          {
-            year: 2024,
-            month: "09月",
-            name: "Bruno Mars 火星人布魯諾",
-            kind: "國際演唱會",
-            photos: []
-          },
-          {
-            year: 2024,
-            month: "11月",
-            name: "Stray Kids 世界巡迴",
-            kind: "韓流演唱會",
-            photos: []
-          }
-        ]
-      },
-      {
-        id: "pier2",
-        name: "駁二藝術特區",
-        type: "港區藝文園區",
-        lat: 22.6205,
-        lng: 120.2799,
-        events: [
-          {
-            year: 2023,
-            month: "04月",
-            name: "大港開唱 2023",
-            kind: "音樂慶典",
-            photos: []
-          },
-          {
-            year: 2024,
-            month: "12月",
-            name: "魷魚遊戲進駐高雄",
-            kind: "國際 IP 快閃",
-            photos: []
-          },
-          {
-            year: 2025,
-            month: "02月",
-            name: "冬日遊樂園（吉伊卡哇，與愛河灣串聯）",
-            kind: "療癒 IP 展",
-            photos: []
-          },
-          {
-            year: 2025,
-            month: "03月",
-            name: "2025 大港開唱",
-            kind: "音樂祭",
-            photos: []
-          }
-        ]
-      },
-      {
-        id: "qijin",
-        name: "旗津 / 旗津海水浴場",
-        type: "海水浴場・親子觀光活動",
-        lat: 22.61018,
-        lng: 120.2669,
-        events: [
-          {
-            year: 2023,
-            month: "08月",
-            name: "旗津風箏節",
-            kind: "親子觀光",
-            photos: []
-          },
-          {
-            year: 2025,
-            month: "08月",
-            name: "旗津風箏節暨氣墊水樂園",
-            kind: "暑假活動",
-            photos: []
-          }
-        ]
-      },
-      {
-        id: "central_park",
-        name: "高雄中央公園",
-        type: "城市綠地・節慶點燈場地",
-        lat: 22.6246,
-        lng: 120.3006,
-        events: [
-          {
-            year: 2024,
-            month: "12月",
-            name: "2025 聖誕生活節",
-            kind: "節慶點燈",
-            photos: []
-          }
-        ]
-      },
-      {
-        id: "kaohsiung_station",
-        name: "高雄車站（預定地）",
-        type: "交通樞紐・IP 展覽預定場地",
-        lat: 22.6393,
-        lng: 120.302,
-        events: [
-          {
-            year: 2025,
-            month: "11月",
-            name: "100% 哆啦A夢特展（預定地點）",
-            kind: "IP 特展",
-            photos: []
-          }
-        ]
-      },
-      {
-        id: "weiwuying",
-        name: "衛武營都會公園 / 國家藝術文化中心",
-        type: "藝文場館・燈會主場",
-        lat: 22.6255,
-        lng: 120.3452,
-        events: [
-          {
-            year: 2022,
-            month: "02月",
-            name: "2022 台灣燈會（雙主場之一）",
-            kind: "國際級節慶",
-            photos: []
-          }
-        ]
-      },
-      {
-        id: "aozihdi",
-        name: "凹子底森林公園",
-        type: "都會公園・節慶遊行場地",
-        lat: 22.6637,
-        lng: 120.302,
-        events: [
-          {
-            year: 2024,
-            month: "10月",
-            name: "萬聖節大遊行（與高流串聯）",
-            kind: "音樂 / 節慶",
-            photos: []
-          }
-        ]
-      }
-    ];
+<script>
+  // ========= 地點（地圖上每個地點一個圖釘） =========
+  const PLACES = [
+    { id:"meinong", name:"美濃客家文物館", lat:22.9005, lng:120.5420 },
+    { id:"love_river_bay", name:"愛河灣", lat:22.6178, lng:120.2889 },
+    { id:"kmc", name:"高雄流行音樂中心（高流）", lat:22.6169, lng:120.2874 },
+    { id:"penglai", name:"蓬萊商港區", lat:22.6199, lng:120.2817 },
+    { id:"pier2", name:"駁二藝術特區", lat:22.6205, lng:120.2799 },
+    { id:"kaohsiung_harbor", name:"高雄港灣 / 港區", lat:22.6130, lng:120.2850 },
+    { id:"love_river", name:"愛河", lat:22.6305, lng:120.2955 },
+    { id:"weiwuying", name:"衛武營", lat:22.6255, lng:120.3452 },
+    { id:"nknu", name:"高師大（高雄師範大學）", lat:22.6276, lng:120.3320 },
+    { id:"dream_mall", name:"夢時代 / 時代大道", lat:22.59515, lng:120.30692 },
+    { id:"lotus_lake", name:"左營蓮池潭", lat:22.6842, lng:120.2975 },
+    { id:"arena", name:"高雄巨蛋", lat:22.6692, lng:120.3017 },
+    { id:"world_games", name:"世運主場館（國家體育場）", lat:22.7023, lng:120.2947 },
+    { id:"qijin", name:"旗津海水浴場", lat:22.61018, lng:120.2669 },
+    { id:"pier7", name:"高雄港七號碼頭", lat:22.6138, lng:120.2835 },
+    { id:"aozihdi", name:"凹子底森林公園", lat:22.6637, lng:120.3020 },
+    { id:"central_park", name:"中央公園", lat:22.6246, lng:120.3006 },
+    { id:"city_hall", name:"高雄市政府（四維行政中心）", lat:22.6230, lng:120.3140 },
+    { id:"science_museum", name:"國立科工館", lat:22.6399, lng:120.3248 },
+  ];
+  const placeById = Object.fromEntries(PLACES.map(p => [p.id, p]));
 
-    // 年份列表（自動抓）
-    const allYears = Array.from(
-      new Set(locations.flatMap((loc) => loc.events.map((e) => e.year)))
-    ).sort();
+  // ========= 活動（2020～2026/01/01 你提供的完整清單） =========
+  const EVENTS = [
+    { id:"2020-10-meinong-hakka-trip", year:2020, month:10, monthLabel:"10月", name:"好客旅遊去", kind:"民俗文化", places:["meinong"] },
+    { id:"2020-12-newyear-cross-lightyears", year:2020, month:12, monthLabel:"12月", name:"跨百光年跨年晚會", kind:"節慶（市長首場）", places:["love_river_bay","kmc","penglai"] },
 
-    let activeYear = "all";
-    let activeLocation = null;
-function getAvailableYears() {
-  // 依目前地點範圍計算「有哪些年份真的有活動」
-  let list = EVENTS;
-  if (activePlace !== "all") {
-    list = list.filter(e => e.places.includes(activePlace));
+    { id:"2021-03-megaport-restart", year:2021, month:3, monthLabel:"03月", name:"大港開唱（復辦首年）", kind:"音樂祭", places:["pier2"] },
+    { id:"2021-05-ocean-party", year:2021, month:5, monthLabel:"05月", name:"高雄海洋派對", kind:"水域休閒", places:["love_river_bay"] },
+    { id:"2021-10-national-day-fireworks", year:2021, month:10, monthLabel:"10月", name:"國慶煙火在高雄", kind:"國家慶典", places:["kaohsiung_harbor"] },
+    { id:"2021-11-dragonboat-carnival", year:2021, month:11, monthLabel:"11月", name:"國慶龍舟嘉年華", kind:"運動賽事", places:["love_river"] },
+    { id:"2021-12-newyear-2022-dual-stage", year:2021, month:12, monthLabel:"12月", name:"2022 高雄跨年（雙舞台）", kind:"節慶晚會", places:["kmc","penglai"] },
+
+    { id:"2022-02-taiwan-lantern-festival", year:2022, month:2, monthLabel:"02月", name:"2022 台灣燈會（雙主場）", kind:"國際級節慶", places:["weiwuying","love_river_bay"] },
+    { id:"2022-03-ksaf", year:2022, month:3, monthLabel:"03月", name:"高雄春天藝術節（KSAF）", kind:"藝文盛會", places:["weiwuying","nknu"] },
+    { id:"2022-08-creativexpo-floating", year:2022, month:8, monthLabel:"08月", name:"台灣文博會（聊療漂漂河）", kind:"藝文 IP", places:["love_river_bay","kmc"] },
+    { id:"2022-10-design-expo", year:2022, month:10, monthLabel:"10月", name:"台灣設計展（設計中島）", kind:"藝文設計", places:["penglai"] },
+    { id:"2022-10-takao-rock", year:2022, month:10, monthLabel:"10月", name:"Takao Rock 打狗祭", kind:"音樂祭", places:["kmc"] },
+    { id:"2022-12-newyear-2023-yawan", year:2022, month:12, monthLabel:"12月", name:"2023 跨年亞灣未來市", kind:"節慶晚會", places:["dream_mall"] },
+
+    { id:"2023-01-lotus-lake-lantern", year:2023, month:1, monthLabel:"01月", name:"蓮潭燈會（萌兔）", kind:"節慶（首度移師）", places:["lotus_lake"] },
+    { id:"2023-02-westlife-bsb", year:2023, month:2, monthLabel:"02月", name:"Westlife & Backstreet Boys", kind:"國際演唱會", places:["arena","world_games"] },
+    { id:"2023-03-blackpink-born-pink", year:2023, month:3, monthLabel:"03月", name:"BLACKPINK［BORN PINK］", kind:"國際演唱會", places:["world_games"] },
+    { id:"2023-04-a-mei-and-megaport", year:2023, month:4, monthLabel:"04月", name:"張惠妹 ASMR / 大港開唱", kind:"音樂慶典", places:["arena","pier2"] },
+    { id:"2023-08-qijin-kite", year:2023, month:8, monthLabel:"08月", name:"旗津風箏節", kind:"親子觀光", places:["qijin"] },
+    { id:"2023-10-green-knights-show", year:2023, month:10, monthLabel:"10月", name:"翡翠騎士（日農二高）展演", kind:"國際交流", places:["pier7"] },
+    { id:"2023-11-coldplay", year:2023, month:11, monthLabel:"11月", name:"Coldplay 酷玩樂團", kind:"國際演唱會", places:["world_games"] },
+    { id:"2023-12-newyear-2024", year:2023, month:12, monthLabel:"12月", name:"2024 跨年晚會", kind:"節慶晚會", places:["dream_mall"] },
+
+    { id:"2024-01-winter-duck", year:2024, month:1, monthLabel:"01月", name:"冬日遊樂園（黃色小鴨回歸）", kind:"國際亮點 IP", places:["love_river_bay"] },
+    { id:"2024-02-ed-sheeran", year:2024, month:2, monthLabel:"02月", name:"Ed Sheeran 紅髮艾德", kind:"國際演唱會", places:["world_games"] },
+    { id:"2024-03-sakura-mayday", year:2024, month:3, monthLabel:"03月", name:"高雄櫻花季 / 五月天", kind:"音樂祭 / 演唱會", places:["dream_mall","world_games"] },
+    { id:"2024-04-golden-wave", year:2024, month:4, monthLabel:"04月", name:"Golden Wave in Taiwan", kind:"韓流拼盤", places:["world_games"] },
+    { id:"2024-07-beer-festival", year:2024, month:7, monthLabel:"07月", name:"高雄啤酒音樂節", kind:"商業祭典", places:["dream_mall"] },
+    { id:"2024-09-bruno-mars", year:2024, month:9, monthLabel:"09月", name:"Bruno Mars 火星人布魯諾", kind:"國際演唱會", places:["world_games"] },
+    { id:"2024-09-one-ok-rock", year:2024, month:9, monthLabel:"09月", name:"ONE OK ROCK 演唱會", kind:"國際演唱會", places:["world_games"] },
+    { id:"2024-10-orange-devils-greenknights", year:2024, month:10, monthLabel:"10月", name:"橘色惡魔、翡翠騎士回訪", kind:"國際交流", places:["kaohsiung_harbor"] },
+    { id:"2024-10-takao-rock-halloween", year:2024, month:10, monthLabel:"10月", name:"打狗祭 / 萬聖節大遊行", kind:"音樂 / 節慶", places:["kmc","aozihdi"] },
+    { id:"2024-11-stray-kids", year:2024, month:11, monthLabel:"11月", name:"Stray Kids 世界巡迴", kind:"韓流演唱會", places:["world_games"] },
+    { id:"2024-12-lisa-meet", year:2024, month:12, monthLabel:"12月", name:"Lisa（Blackpink）見面會", kind:"國際演唱會", places:["arena"] },
+    { id:"2024-12-squid-game-2", year:2024, month:12, monthLabel:"12月", name:"魷魚遊戲 2 進駐高雄", kind:"國際 IP 快閃", places:["pier2"] },
+    { id:"2024-12-christmas-life-2025", year:2024, month:12, monthLabel:"12月", name:"2025 聖誕生活節", kind:"節慶點燈", places:["central_park"] },
+
+    { id:"2025-01-newyear-2025", year:2025, month:1, monthLabel:"01月", name:"2025 跨年晚會 / 元旦升旗", kind:"節慶晚會", places:["dream_mall","city_hall"] },
+    { id:"2025-01-day6", year:2025, month:1, monthLabel:"01月", name:"DAY6 世界巡迴演唱會", kind:"韓流演唱會", places:["kmc"] },
+    { id:"2025-02-maroon5", year:2025, month:2, monthLabel:"02月", name:"Maroon 5 魔力紅", kind:"國際演唱會", places:["world_games"] },
+    { id:"2025-02-winter-chiikawa", year:2025, month:2, monthLabel:"02月", name:"冬日遊樂園（吉伊卡哇）", kind:"療癒 IP 展", places:["pier2","love_river_bay"] },
+    { id:"2025-03-megaport-sakura", year:2025, month:3, monthLabel:"03月", name:"2025 大港開唱 / 櫻花季", kind:"音樂祭", places:["pier2","dream_mall"] },
+    { id:"2025-08-qijin-summer", year:2025, month:8, monthLabel:"08月", name:"旗津風箏節暨氣墊水樂園", kind:"暑假活動", places:["qijin"] },
+    { id:"2025-10-takao-rock-2025", year:2025, month:10, monthLabel:"10月", name:"2025 打狗祭", kind:"音樂祭", places:["kmc"] },
+    { id:"2025-11-doraemon", year:2025, month:11, monthLabel:"11月", name:"100% 哆啦A夢特展", kind:"IP 特展", places:["science_museum"] },
+    { id:"2025-12-newyear-2026", year:2025, month:12, monthLabel:"12月", name:"2026 跨年晚會「雄嗨趴」", kind:"節慶晚會", places:["dream_mall"] },
+
+    { id:"2026-01-newyear-dawn", year:2026, month:1, monthLabel:"01月", name:"2026 元旦升旗 / 晨曦演唱會", kind:"節慶", places:["kmc"] },
+    { id:"2026-01-superjunior-ss10", year:2026, month:1, monthLabel:"01月", name:"Super Junior SS10（1/23-25）", kind:"國際演唱會", places:["arena"] },
+  ];
+
+  // ========= 狀態 =========
+  let activePlace = "all"; // "all" or place id
+  let activeYear = "all";  // "all" or number string
+
+  const scopeTitleEl = document.getElementById("scopeTitle");
+  const scopeSubEl   = document.getElementById("scopeSub");
+  const yearFiltersEl= document.getElementById("yearFilters");
+  const eventListEl  = document.getElementById("eventList");
+
+  // ========= 年份：依地點動態產生（你要求：某地點某年沒活動就不顯示該年） =========
+  function getAvailableYears(){
+    let list = EVENTS;
+    if (activePlace !== "all") list = list.filter(e => e.places.includes(activePlace));
+    return Array.from(new Set(list.map(e => e.year))).sort((a,b)=>a-b);
   }
-  return Array.from(new Set(list.map(e => e.year))).sort();
-}
-
-function ensureActiveYearValid() {
-  const years = getAvailableYears();
-  if (activeYear !== "all" && !years.includes(Number(activeYear))) {
-    activeYear = "all";
+  function ensureActiveYearValid(){
+    const years = getAvailableYears();
+    if (activeYear !== "all" && !years.includes(Number(activeYear))){
+      activeYear = "all";
+    }
   }
-}
-    
-    const locationNameEl = document.getElementById("locationName");
-    const locationTypeEl = document.getElementById("locationType");
-    const eventListEl = document.getElementById("eventList");
-    const yearFiltersEl = document.getElementById("yearFilters");
+  function renderYearFilters(){
+    ensureActiveYearValid();
+    const years = getAvailableYears();
+    const buttons = ["all", ...years];
 
-    // ========= 2. 年份篩選 pill =========
-function renderYearFilters() {
-  ensureActiveYearValid();
+    yearFiltersEl.innerHTML = buttons.map(y=>{
+      const label = y === "all" ? "全部年份" : String(y);
+      const isActive = String(y) === String(activeYear);
+      return `<button class="pill ${isActive ? "active":""}" data-year="${y}">${label}</button>`;
+    }).join("");
 
-  const years = getAvailableYears();
-  const yearButtons = ["all", ...years];
-
-  yearFiltersEl.innerHTML = yearButtons.map(y => {
-    const label = y === "all" ? "全部年份" : String(y);
-    const cls = (String(y) === String(activeYear)) ? "pill active" : "pill";
-    return `<button class="${cls}" data-year="${y}">${label}</button>`;
-  }).join("");
-
-  yearFiltersEl.querySelectorAll("button").forEach(btn => {
-    btn.addEventListener("click", () => {
-      activeYear = btn.dataset.year;
-      renderYearFilters();
-      renderEvents();
-    });
-  });
-}
-
-
-    // ========= 3. 初始化地圖 =========
-    const map = L.map("map").setView([22.63, 120.30], 12);
-
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19,
-      attribution: "&copy; OpenStreetMap 貢獻者"
-    }).addTo(map);
-
-    function renderLocation(location) {
-      activeLocation = location;
-      locationNameEl.textContent = location.name;
-      locationTypeEl.textContent = location.type;
-
-      let events = [...location.events];
-
-      if (activeYear !== "all") {
-        const y = Number(activeYear);
-        events = events.filter((e) => e.year === y);
-      }
-
-      events.sort((a, b) => {
-        if (a.year === b.year) return a.month.localeCompare(b.month);
-        return b.year - a.year;
+    yearFiltersEl.querySelectorAll("button").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        activeYear = btn.dataset.year;
+        renderYearFilters();
+        renderEvents();
       });
+    });
+  }
 
-      if (!events.length) {
-        eventListEl.innerHTML =
-          "<div class='hint'>此地點在選擇的年份沒有活動紀錄，可以試試看其他年份或選「全部年份」。</div>";
+  // ========= 照片規則：你上傳照片到指定資料夾就會自己顯示 =========
+  // 會自動嘗試載入 images/{year}/{eventId}/01.jpg ~ 06.jpg
+  function expectedFolder(ev){
+    return `images/${ev.year}/${ev.id}/`;
+  }
+
+  function tryLoadImage(url){
+    return new Promise(resolve=>{
+      const img = new Image();
+      img.onload = ()=> resolve(url);
+      img.onerror= ()=> resolve(null);
+      img.src = url + `?v=${Date.now()}`; // 避免快取卡住（上傳後立刻刷新比較準）
+    });
+  }
+
+  async function loadEventPhotos(ev){
+    const base = expectedFolder(ev);
+    const candidates = [];
+    for (let i=1;i<=6;i++){
+      const n = String(i).padStart(2,"0");
+      candidates.push(`${base}${n}.jpg`);
+    }
+
+    const results = await Promise.all(candidates.map(tryLoadImage));
+    return results.filter(Boolean);
+  }
+
+  // ========= 右側列表 =========
+  function renderEvents(){
+    const year = (activeYear === "all") ? null : Number(activeYear);
+
+    let list = EVENTS.slice();
+    if (year) list = list.filter(e => e.year === year);
+    if (activePlace !== "all") list = list.filter(e => e.places.includes(activePlace));
+
+    // 新到舊
+    list.sort((a,b)=>{
+      if (a.year !== b.year) return b.year - a.year;
+      if (a.month !== b.month) return b.month - a.month;
+      return a.name.localeCompare(b.name, "zh-Hant");
+    });
+
+    // 更新標題
+    if (activePlace === "all"){
+      scopeTitleEl.textContent = "全部地點";
+    } else {
+      scopeTitleEl.textContent = placeById[activePlace]?.name || "單一地點";
+    }
+    scopeSubEl.textContent = `目前顯示：${activeYear === "all" ? "全部年份" : activeYear} · 共 ${list.length} 筆活動`;
+
+    if (!list.length){
+      eventListEl.innerHTML = `<div class="hint">目前條件下沒有活動，請切換年份或清除地點篩選。</div>`;
+      return;
+    }
+
+    eventListEl.innerHTML = list.map(ev=>{
+      const placeNames = ev.places.map(pid => placeById[pid]?.name || pid).join("、");
+      const folder = expectedFolder(ev);
+
+      // 先放 placeholder，等照片真的存在再換成照片
+      const placeholderThumbs = Array.from({length:2}).map((_,idx)=>{
+        return `<div class="thumb placeholder" id="ph-${ev.id}-${idx}"></div>`;
+      }).join("");
+
+      return `
+        <article class="event-card" id="card-${ev.id}">
+          <div class="event-header">
+            <span class="event-date">${ev.year} 年 ${ev.monthLabel}</span>
+            <span class="event-name">${ev.name}</span>
+          </div>
+
+          <div class="event-meta">
+            <span class="tag"><span class="tag-dot"></span><span>${ev.kind}</span></span>
+            <span class="tag">${placeNames}</span>
+          </div>
+
+          <div class="photo-row" id="photos-${ev.id}">
+            ${placeholderThumbs}
+          </div>
+
+          <div class="missing-box">
+            <div>📌 <b>eventId：</b><span class="mono">${ev.id}</span></div>
+            <div>📁 <b>照片放這裡：</b><span class="mono">${folder}</span></div>
+            <div>🖼 檔名建議：<span class="mono">01.jpg</span>、<span class="mono">02.jpg</span>、<span class="mono">03.jpg</span>…（最多自動抓到 06.jpg）</div>
+          </div>
+        </article>
+      `;
+    }).join("");
+
+    // 非同步載入照片（有就顯示，沒有就保留 placeholder）
+    list.forEach(async ev=>{
+      const urls = await loadEventPhotos(ev);
+      const container = document.getElementById(`photos-${ev.id}`);
+      if (!container) return;
+
+      if (!urls.length){
+        // 沒照片：保留 placeholder
         return;
       }
 
-      eventListEl.innerHTML = events
-        .map((ev) => {
-          const photos =
-            ev.photos && ev.photos.length
-              ? ev.photos
-              : [
-                  "https://images.pexels.com/photos/167636/pexels-photo-167636.jpeg",
-                  "https://images.pexels.com/photos/196652/pexels-photo-196652.jpeg"
-                ];
+      container.innerHTML = urls.map(url=>{
+        return `<div class="thumb" style="background-image:url('${url}')"></div>`;
+      }).join("");
+    });
+  }
 
-          const photoHtml = photos
-            .map(
-              (url) =>
-                `<div class="photo-thumb" style="background-image:url('${url}')"></div>`
-            )
-            .join("");
+  // ========= 地圖（圖釘標記） =========
+  const map = L.map("map").setView([22.63, 120.30], 12);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution: "&copy; OpenStreetMap 貢獻者"
+  }).addTo(map);
 
-          return `
-            <article class="event-card">
-              <div class="event-header">
-                <span class="event-date">${ev.year} 年 ${ev.month}</span>
-                <span class="event-name">${ev.name}</span>
-              </div>
-              <div class="event-meta">
-                <span class="tag">
-                  <span class="tag-dot"></span>
-                  <span>${ev.kind}</span>
-                </span>
-                <span class="tag">${location.name}</span>
-              </div>
-              <div class="photo-row">
-                ${photoHtml}
-              </div>
-            </article>
-          `;
-        })
-        .join("");
-    }
+  const PIN_ICON = L.divIcon({
+    className: "pin-icon",
+    html: `
+      <svg width="28" height="44" viewBox="0 0 28 44" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M14 43C14 43 3 28.7 3 18C3 10.8 8.1 5 14 5C19.9 5 25 10.8 25 18C25 28.7 14 43 14 43Z"
+              fill="#c9ada7" stroke="#9a8c98" stroke-width="2"/>
+        <circle cx="14" cy="18" r="6" fill="#f4f1ec" stroke="#9a8c98" stroke-width="2"/>
+      </svg>
+    `,
+    iconSize: [28, 44],
+    iconAnchor: [14, 44],
+    tooltipAnchor: [0, -34]
+  });
 
-    // ========= 4. 建立標記 =========
-    locations.forEach((loc) => {
-     // 圖釘 icon：用 SVG（不用依賴 Leaflet 預設圖片，GitHub Pages 不會找不到圖）
-const PIN_ICON = L.divIcon({
-  className: "pin-icon",
-  html: `
-    <svg width="28" height="44" viewBox="0 0 28 44" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <path d="M14 43C14 43 3 28.7 3 18C3 10.8 8.1 5 14 5C19.9 5 25 10.8 25 18C25 28.7 14 43 14 43Z"
-            fill="#c9ada7" stroke="#9a8c98" stroke-width="2"/>
-      <circle cx="14" cy="18" r="6" fill="#f4f1ec" stroke="#9a8c98" stroke-width="2"/>
-    </svg>
-  `,
-  iconSize: [28, 44],
-  iconAnchor: [14, 44],
-  tooltipAnchor: [0, -34]
-});
+  // 只顯示有被活動使用到的地點
+  const usedPlaceIds = new Set(EVENTS.flatMap(e => e.places));
+  PLACES.filter(p => usedPlaceIds.has(p.id)).forEach(p=>{
+    const marker = L.marker([p.lat, p.lng], { icon: PIN_ICON }).addTo(map);
+    marker.bindTooltip(p.name, { direction:"top" });
 
-// 只有被活動用到的地點才畫 marker
-const usedPlaceIds = new Set(EVENTS.flatMap(e => e.places));
+    marker.on("click", ()=>{
+      activePlace = p.id;
+      renderYearFilters(); // ★ 地點切換後：年份選項動態更新（只留有活動的年份）
+      renderEvents();
+    });
+  });
 
-PLACES.filter(p => usedPlaceIds.has(p.id)).forEach(p => {
-  const marker = L.marker([p.lat, p.lng], { icon: PIN_ICON }).addTo(map);
-  marker.bindTooltip(p.name, { direction: "top" });
-
-  marker.on("click", () => {
-    activePlace = p.id;
-    renderYearFilters();   // ★ 新增：地點切換後，年份選項重新計算
+  document.getElementById("clearPlace").addEventListener("click", ()=>{
+    activePlace = "all";
+    renderYearFilters();
     renderEvents();
   });
-});
 
-    // 預設選擇第一個地點
-    renderLocation(locations[0]);
-  </script>
+  // init
+  renderYearFilters();
+  renderEvents();
+</script>
 </body>
 </html>
-
-
-
-
