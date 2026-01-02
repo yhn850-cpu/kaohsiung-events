@@ -211,7 +211,7 @@
     }
 
 
-    /* 年份按鈕 */
+    /* 年份按鈕：清楚可讀、避免撞色 */
     .pill{
       font-size:11px;
       padding:7px 12px;
@@ -367,6 +367,17 @@
         <div class="map-card"><div id="map"></div></div>
       </div>
 
+      <aside class="sidebar">
+        <div class="scope-title" id="scopeTitle">全部地點</div>
+        <div class="scope-sub" id="scopeSub">目前顯示：全部年份 · 全部活動</div>
+
+        
+        <div class="row">
+          <span class="select-label">地點</span>
+          <select id="placeSelect" class="select" aria-label="選擇地點"></select>
+        </div>
+<div class="row" id="yearFilters"></div>
+
         <div class="row">
           <button class="btn" id="clearPlace">清除地點篩選（回到全部）</button>
         </div>
@@ -381,8 +392,8 @@
     </div>
 
     <footer class="footer">
-     // 照片規則：<span class="mono">images/2024/2024-01-winter-duck/01.jpg</span>、<span class="mono">02.jpg</span>…（英文檔名最穩）。<br/>
-     // 地圖：OpenStreetMap + Leaflet（座標為近似位置，可再微調）。
+      照片規則：<span class="mono">images/2024/2024-01-winter-duck/01.jpg</span>、<span class="mono">02.jpg</span>…（英文檔名最穩）。<br/>
+      地圖：OpenStreetMap + Leaflet（座標為近似位置，可再微調）。
     </footer>
   </div>
 
@@ -517,7 +528,29 @@
       activeYear = "all";
     }
 
-  // ========= 照片規則：上傳照片到指定資料夾就會自己顯示 =========
+  // ========= 地點下拉選單（避免一次顯示太多地點造成頁面變長） =========
+ }
+  function renderYearFilters(){
+    ensureActiveYearValid();
+    const years = getAvailableYears();
+    const buttons = ["all", ...years];
+
+    yearFiltersEl.innerHTML = buttons.map(y=>{
+      const label = y === "all" ? "全部年份" : String(y);
+      const isActive = String(y) === String(activeYear);
+      return `<button class="pill ${isActive ? "active":""}" data-year="${y}">${label}</button>`;
+    }).join("");
+
+    yearFiltersEl.querySelectorAll("button").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        activeYear = btn.dataset.year;
+        renderYearFilters();
+        renderEvents();
+      });
+    });
+  }
+
+  // ========= 照片規則：你上傳照片到指定資料夾就會自己顯示 =========
   // 會自動嘗試載入 images/{year}/{eventId}/01.jpg ~ 06.jpg
   function expectedFolder(ev){
     return `images/${ev.year}/${ev.id}/`;
@@ -600,7 +633,7 @@
           <div class="missing-box">
             <div>📌 <b>eventId：</b><span class="mono">${ev.id}</span></div>
             <div>📁 <b>照片放這裡：</b><span class="mono">${folder}</span></div>
-            <div>🖼 檔名：<span class="mono">01.jpg</span>、<span class="mono">02.jpg</span>、<span class="mono">03.jpg</span>…（最多自動抓到 06.jpg）</div>
+            <div>🖼 檔名建議：<span class="mono">01.jpg</span>、<span class="mono">02.jpg</span>、<span class="mono">03.jpg</span>…（最多自動抓到 06.jpg）</div>
           </div>
         </article>
       `;
@@ -730,7 +763,6 @@ eventListEl.addEventListener("click", (e)=>{
 </script>
 </body>
 </html>
-
 
 
 
