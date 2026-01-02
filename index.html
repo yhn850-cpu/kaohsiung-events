@@ -49,7 +49,8 @@
       border-radius:999px;
       border:1px solid rgba(112,99,88,0.5);
       background: rgba(244,241,236,0.75);
-      display:inline-flex; align-items:center; gap:8px;
+      display:inline-flex;
+      align-items:center; gap:8px;
       color:#3f3f46; white-space:nowrap;
     }
     .badge-dot{
@@ -99,7 +100,28 @@
 
     .row{ margin-top:10px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
 
-    /* 縮圖按鈕（點擊放大） */
+    .select-label{
+      font-size:12px;
+      color:#6b7280;
+      padding-left:2px;
+      min-width: 40px;
+    }
+    .select{
+      flex:1;
+      min-width: 180px;
+      font-size:12px;
+      padding:8px 10px;
+      border-radius:12px;
+      border:1px solid #c8b6a6;
+      background: rgba(244,241,236,0.9);
+      color:#1f2937;
+      outline:none;
+    }
+    .select:focus{
+      border-color:#9a8c98;
+      box-shadow:0 0 0 3px rgba(154,140,152,0.25);
+    }
+
     .thumb-btn{
       appearance:none;
       border:none;
@@ -112,7 +134,7 @@
       outline-offset:2px;
     }
 
-    /* Lightbox 放大檢視 */
+    /* Lightbox */
     .lightbox{
       position:fixed;
       inset:0;
@@ -186,8 +208,6 @@
       text-underline-offset: 2px;
     }
 
-
-    /* 年份按鈕 */
     .pill{
       font-size:11px;
       padding:7px 12px;
@@ -246,7 +266,8 @@
     .event-name{ font-size:14px; font-weight:900; color:#3b3a3a; }
 
     .event-meta{
-      display:flex; flex-wrap:wrap; gap:6px;
+      display:flex; flex-wrap:wrap;
+      gap:6px;
       font-size:12px; color:#6b6b6b;
       margin-bottom:8px;
     }
@@ -290,21 +311,19 @@
 
     .missing-box{
       margin-top:9px;
-      padding:9px 10px;
+      padding:12px;
       border-radius:12px;
-      border:1px dashed rgba(154,140,152,0.8);
-      background: rgba(244,241,236,0.9);
+      border:1px solid #d2b48c;
+      background: #fffaf0;
       color:#403b33;
-      font-size:12px;
-      line-height:1.45;
-      word-break:break-all;
+      font-size:14px;
+      line-height:1.6;
     }
     .mono{
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
       font-size:11px;
     }
 
-    /* 圖釘 icon */
     .pin-icon{ background:transparent; border:none; }
     .pin-icon svg{ filter: drop-shadow(0 10px 10px rgba(64,59,51,0.25)); }
 
@@ -333,7 +352,7 @@
     <header class="header">
       <div class="title">
         <h1>KAOHSIUNG EVENTS MAP</h1>
-        <div class="sub">陳其邁任內活動整理 · 2020–2026/01/01（可逐步補照片）</div>
+        <div class="sub">陳其邁任內活動整理 · 2020–2026/01/01</div>
       </div>
       <div class="badge"><span class="badge-dot"></span>點地圖圖釘 → 右側看該地點歷年活動</div>
     </header>
@@ -347,15 +366,14 @@
         <div class="scope-title" id="scopeTitle">全部地點</div>
         <div class="scope-sub" id="scopeSub">目前顯示：全部年份 · 全部活動</div>
 
+        <div class="row">
+          <span class="select-label">地點</span>
+          <select id="placeSelect" class="select" aria-label="選擇地點"></select>
+        </div>
         <div class="row" id="yearFilters"></div>
 
         <div class="row">
           <button class="btn" id="clearPlace">清除地點篩選（回到全部）</button>
-        </div>
-
-        <div class="hint">
-          📌 你還沒找照片也沒關係：每張卡片都會顯示 <b>eventId</b> 與「照片應該放的資料夾路徑」。<br/>
-          ✅ 之後你只要把照片上傳到：<span class="mono">images/年份/eventId/01.jpg</span>、<span class="mono">02.jpg</span>… 網站會自動顯示。
         </div>
 
         <div class="event-list" id="eventList"></div>
@@ -363,11 +381,9 @@
     </div>
 
     <footer class="footer">
-      照片規則：<span class="mono">images/2024/2024-01-winter-duck/01.jpg</span>、<span class="mono">02.jpg</span>…（英文檔名最穩）。<br/>
       地圖：OpenStreetMap + Leaflet（座標為近似位置，可再微調）。
     </footer>
   </div>
-
 
   <div class="lightbox" id="lightbox" aria-hidden="true">
     <div class="lightbox-backdrop" id="lightboxBackdrop" data-close="1"></div>
@@ -383,9 +399,7 @@
     </div>
   </div>
 
-
 <script>
-  // ========= 地點（地圖上每個地點一個圖釘） =========
   const PLACES = [
     { id:"meinong", name:"美濃客家文物館", lat:22.9005, lng:120.5420 },
     { id:"love_river_bay", name:"愛河灣", lat:22.6178, lng:120.2889 },
@@ -409,7 +423,6 @@
   ];
   const placeById = Object.fromEntries(PLACES.map(p => [p.id, p]));
 
-  // ========= 活動（2020～2026/01/01 ） =========
   const EVENTS = [
     { id:"2020-10-meinong-hakka-trip", year:2020, month:10, monthLabel:"10月", name:"好客旅遊去", kind:"民俗文化", places:["meinong"] },
     { id:"2020-12-newyear-cross-lightyears", year:2020, month:12, monthLabel:"12月", name:"跨百光年跨年晚會", kind:"節慶（市長首場）", places:["love_river_bay","kmc","penglai"] },
@@ -458,22 +471,30 @@
     { id:"2025-08-qijin-summer", year:2025, month:8, monthLabel:"08月", name:"旗津風箏節暨氣墊水樂園", kind:"暑假活動", places:["qijin"] },
     { id:"2025-10-takao-rock-2025", year:2025, month:10, monthLabel:"10月", name:"2025 打狗祭", kind:"音樂祭", places:["kmc"] },
     { id:"2025-11-doraemon", year:2025, month:11, monthLabel:"11月", name:"100% 哆啦A夢特展", kind:"IP 特展", places:["science_museum"] },
-    { id:"2025-12-newyear-2026", year:2025, month:12, monthLabel:"12月", name:"2026 跨年晚會「雄嗨趴」", kind:"節慶晚會", places:["dream_mall"] },
+    { 
+      id: "2025-12-newyear-2026", 
+      year: 2025, 
+      month: 12, 
+      monthLabel: "12月", 
+      name: "2026 跨年晚會「雄嗨趴」", 
+      kind: "節慶晚會", 
+      places: ["dream_mall"],
+      desc: "2026高雄跨年「雄嗨趴」在夢時代登場！由告五人、八三夭領軍，陳其邁市長與球后戴資穎驚喜現身，與現場30萬人共同倒數，迎接240秒亞灣花火綻放。" 
+    },
 
-    { id:"2026-01-superjunior-ss10", year:2026, month:1, monthLabel:"01月", name:"Super Junior SS10（1/23-25）", kind:"國際演唱會", places:["arena"] ,
-    : "2026高雄跨年「雄嗨趴」在夢時代登場，由告五人、八三夭壓軸，陳其邁市長與球后戴資穎共同倒數迎接240秒煙火。"},
+    { id:"2026-01-newyear-dawn", year:2026, month:1, monthLabel:"01月", name:"2026 元旦升旗 / 晨曦演唱會", kind:"節慶", places:["kmc"] },
+    { id:"2026-01-superjunior-ss10", year:2026, month:1, monthLabel:"01月", name:"Super Junior SS10（1/23-25）", kind:"國際演唱會", places:["arena"] },
   ];
 
-  // ========= 狀態 =========
-  let activePlace = "all"; // "all" or place id
-  let activeYear = "all";  // "all" or number string
+  let activePlace = "all";
+  let activeYear = "all";
 
   const scopeTitleEl = document.getElementById("scopeTitle");
   const scopeSubEl   = document.getElementById("scopeSub");
   const yearFiltersEl= document.getElementById("yearFilters");
   const eventListEl  = document.getElementById("eventList");
+  const placeSelectEl = document.getElementById("placeSelect");
 
-  // =========（可選）圖片來源網址對照表 =========
   const PHOTO_SOURCES = {
     "images/2025/2025-12-newyear-2026/01.jpg": "https://taidaily.com/2026/01/01/563572/",
     "images/2025/2025-12-newyear-2026/02.jpg": "https://taidaily.com/2026/01/01/563572/",
@@ -486,12 +507,22 @@
     if (activePlace !== "all") list = list.filter(e => e.places.includes(activePlace));
     return Array.from(new Set(list.map(e => e.year))).sort((a,b)=>a-b);
   }
-
   function ensureActiveYearValid(){
     const years = getAvailableYears();
     if (activeYear !== "all" && !years.includes(Number(activeYear))){
       activeYear = "all";
     }
+  }
+
+  function renderPlaceSelect(){
+    placeSelectEl.innerHTML = `<option value="all">全部地點 (不限地點)</option>` + 
+      PLACES.map(p => `<option value="${p.id}">${p.name}</option>`).join("");
+    
+    placeSelectEl.addEventListener("change", (e)=>{
+      activePlace = e.target.value;
+      renderYearFilters();
+      renderEvents();
+    });
   }
 
   function renderYearFilters(){
@@ -564,7 +595,6 @@
 
     eventListEl.innerHTML = list.map(ev=>{
       const placeNames = ev.places.map(pid => placeById[pid]?.name || pid).join("、");
-      const folder = expectedFolder(ev);
       const placeholderThumbs = Array.from({length:2}).map((_,idx)=>{
         return `<div class="thumb placeholder" id="ph-${ev.id}-${idx}"></div>`;
       }).join("");
@@ -575,27 +605,33 @@
             <span class="event-date">${ev.year} 年 ${ev.monthLabel}</span>
             <span class="event-name">${ev.name}</span>
           </div>
+
           <div class="event-meta">
             <span class="tag"><span class="tag-dot"></span><span>${ev.kind}</span></span>
             <span class="tag">${placeNames}</span>
           </div>
+
           <div class="photo-row" id="photos-${ev.id}">
             ${placeholderThumbs}
           </div>
-          <div class="missing-box" style="border-style: solid; background: #fffaf0; border-color: #d2b48c; padding: 12px; border-radius: 8px;">
-  <div style="font-weight: 800; color: #8b4513; margin-bottom: 4px; font-size: 13px; display: flex; align-items: center; gap: 5px;">
-    <span>✨</span> 活動亮點紀錄
-  </div>
-  <div style="line-height: 1.6; color: #444; font-size: 14px; text-align: justify;">
-    ${ev.desc || "活動詳情整理中，敬請期待市長當天的精彩紀錄！"}
-  </div>
-</div>      `;
+
+          <div class="missing-box">
+            <div style="font-weight: 800; color: #8b4513; margin-bottom: 4px; font-size: 13px; display: flex; align-items: center; gap: 5px;">
+              <span>✨</span> 活動亮點紀錄
+            </div>
+            <div style="text-align: justify;">
+              ${ev.desc || "活動詳情整理中，敬請期待市長當天的精彩紀錄！"}
+            </div>
+          </div>
+        </article>
+      `;
     }).join("");
 
     list.forEach(async ev=>{
       const urls = await loadEventPhotos(ev);
       const container = document.getElementById(`photos-${ev.id}`);
       if (!container || !urls.length) return;
+
       container.innerHTML = urls.map(url=>{
         const src = PHOTO_SOURCES[url] || url;
         return `<button class="thumb thumb-btn" type="button" aria-label="放大圖片" data-img="${url}" data-src="${src}" style="background-image:url('${url}')"></button>`;
@@ -603,7 +639,6 @@
     });
   }
 
-  // ========= Lightbox =========
   const lightboxEl = document.getElementById("lightbox");
   const lightboxImg = document.getElementById("lightboxImg");
   const lightboxPath = document.getElementById("lightboxPath");
@@ -617,11 +652,13 @@
     lightboxSrc.textContent = srcUrl || imgUrl;
     lightboxSrc.href = srcUrl || imgUrl;
     lightboxEl.classList.add("open");
+    lightboxEl.setAttribute("aria-hidden","false");
     document.body.style.overflow = "hidden";
   }
 
   function closeLightbox(){
     lightboxEl.classList.remove("open");
+    lightboxEl.setAttribute("aria-hidden","true");
     document.body.style.overflow = "";
     lightboxImg.src = "";
   }
@@ -629,27 +666,35 @@
   eventListEl.addEventListener("click", (e)=>{
     const btn = e.target.closest(".thumb-btn");
     if (!btn) return;
-    openLightbox(btn.dataset.img, btn.dataset.src);
+    const imgUrl = btn.dataset.img;
+    const srcUrl = btn.dataset.src || btn.dataset.img;
+    if (imgUrl) openLightbox(imgUrl, srcUrl);
   });
 
   lightboxClose.addEventListener("click", closeLightbox);
   lightboxBackdrop.addEventListener("click", closeLightbox);
+  document.addEventListener("keydown", (e)=>{
+    if (e.key === "Escape" && lightboxEl.classList.contains("open")) closeLightbox();
+  });
 
-  // ========= 地圖 =========
   const map = L.map("map").setView([22.63, 120.30], 12);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19, attribution: "&copy; OpenStreetMap 貢獻者"
+    maxZoom: 19,
+    attribution: "&copy; OpenStreetMap 貢獻者"
   }).addTo(map);
 
   const PIN_ICON = L.divIcon({
     className: "pin-icon",
     html: `
-      <svg width="28" height="44" viewBox="0 0 28 44" xmlns="http://www.w3.org/2000/svg">
-        <path d="M14 43C14 43 3 28.7 3 18C3 10.8 8.1 5 14 5C19.9 5 25 10.8 25 18C25 28.7 14 43 14 43Z" fill="#B95756" stroke="#8F4A49" stroke-width="2"/>
+      <svg width="28" height="44" viewBox="0 0 28 44" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M14 43C14 43 3 28.7 3 18C3 10.8 8.1 5 14 5C19.9 5 25 10.8 25 18C25 28.7 14 43 14 43Z"
+              fill="#B95756" stroke="#8F4A49" stroke-width="2"/>
         <circle cx="14" cy="18" r="6" fill="#f4f1ec" stroke="#9a8c98" stroke-width="2"/>
       </svg>
     `,
-    iconSize: [28, 44], iconAnchor: [14, 44]
+    iconSize: [28, 44],
+    iconAnchor: [14, 44],
+    tooltipAnchor: [0, -34]
   });
 
   const usedPlaceIds = new Set(EVENTS.flatMap(e => e.places));
@@ -658,6 +703,7 @@
     marker.bindTooltip(p.name, { direction:"top" });
     marker.on("click", ()=>{
       activePlace = p.id;
+      placeSelectEl.value = p.id;
       renderYearFilters();
       renderEvents();
     });
@@ -665,15 +711,14 @@
 
   document.getElementById("clearPlace").addEventListener("click", ()=>{
     activePlace = "all";
+    placeSelectEl.value = "all";
     renderYearFilters();
     renderEvents();
   });
 
-  // init
+  renderPlaceSelect();
   renderYearFilters();
   renderEvents();
 </script>
 </body>
 </html>
-
-
