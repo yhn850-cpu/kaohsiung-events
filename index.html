@@ -509,13 +509,12 @@
   // 如果你擔心「偷圖」爭議，可以把每張圖片的原始來源網址填在這裡。
   // key：圖片在網站上的路徑（例如 "images/2026/2026-01-newyear-dawn/01.jpg"）
   // value：原始來源網址（例如 "https://example.com/original-post"）
-const PHOTO_SOURCES = {
-  "images/2025/2025-12-newyear-dawn/01.jpg": "https://taidaily.com/2026/01/01/563572/",
-  "images/2025/2025-12-newyear-dawn/02.jpg": "https://taidaily.com/2026/01/01/563572/",
-  "images/2025/2025-12-newyear-dawn/03.jpg": "https://taidaily.com/2026/01/01/563572/",
-  "images/2025/2025-12-newyear-dawn/04.jpg": "https://taidaily.com/2026/01/01/563572/",
+ const PHOTO_SOURCES = {
+  "images/2026/2026-01-newyear-dawn/01.jpg": "https://taidaily.com/2026/01/01/563572/",
+  "images/2026/2026-01-newyear-dawn/02.jpg": "https://taidaily.com/2026/01/01/563572/",
+  "images/2026/2026-01-newyear-dawn/03.jpg": "https://taidaily.com/2026/01/01/563572/",
+  "images/2026/2026-01-newyear-dawn/04.jpg": "https://taidaily.com/2026/01/01/563572/",
 };
-
 
   // ========= 年份：依地點動態產生（你要求：某地點某年沒活動就不顯示該年） =========
   function getAvailableYears(){
@@ -670,26 +669,13 @@ const PHOTO_SOURCES = {
         // 沒照片：保留 placeholder
         return;
       }
-container.innerHTML = urls.map(url => {
-  const normalizedPath = url.replace(/^\//, "");
 
-  const sourceUrl =
-    PHOTO_SOURCES[normalizedPath] ||
-    PHOTO_SOURCES[url] ||
-    url;
-
-  return `
-    <button
-      class="thumb thumb-btn"
-      type="button"
-      aria-label="放大圖片"
-      data-img="${url}"
-      data-src="${sourceUrl}"
-      style="background-image:url('${url}')">
-    </button>
-  `;
-}).join("");
-
+      container.innerHTML = urls.map(url=>{
+        const src = PHOTO_SOURCES[url] || url;
+        return `<button class="thumb thumb-btn" type="button" aria-label="放大圖片" data-img="${url}" data-src="${src}" style="background-image:url('${url}')"></button>`;
+      }).join("");
+    });
+  }
 
   // ========= 縮圖點擊：放大檢視（含來源網址） =========
   const lightboxEl = document.getElementById("lightbox");
@@ -742,20 +728,19 @@ container.innerHTML = urls.map(url => {
     attribution: "&copy; OpenStreetMap 貢獻者"
   }).addTo(map);
 
-const PIN_ICON = L.divIcon({
-  className: "pin-icon",
-  html: `
-    <svg width="28" height="44" viewBox="0 0 28 44" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <path d="M14 43C14 43 3 28.7 3 18C3 10.8 8.1 5 14 5C19.9 5 25 10.8 25 18C25 28.7 14 43 14 43Z"
-            fill="#B95756" stroke="#8F4A49" stroke-width="2"/>
-      <circle cx="14" cy="18" r="6" fill="#f4f1ec" stroke="#8F4A49" stroke-width="2"/>
-    </svg>
-  `,
-  iconSize: [28, 44],
-  iconAnchor: [14, 44],
-  tooltipAnchor: [0, -34]
-});
-
+  const PIN_ICON = L.divIcon({
+    className: "pin-icon",
+    html: `
+      <svg width="28" height="44" viewBox="0 0 28 44" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M14 43C14 43 3 28.7 3 18C3 10.8 8.1 5 14 5C19.9 5 25 10.8 25 18C25 28.7 14 43 14 43Z"
+              fill="#c9ada7" stroke="#9a8c98" stroke-width="2"/>
+        <circle cx="14" cy="18" r="6" fill="#f4f1ec" stroke="#9a8c98" stroke-width="2"/>
+      </svg>
+    `,
+    iconSize: [28, 44],
+    iconAnchor: [14, 44],
+    tooltipAnchor: [0, -34]
+  });
 
   // 只顯示有被活動使用到的地點
   const usedPlaceIds = new Set(EVENTS.flatMap(e => e.places));
@@ -785,8 +770,5 @@ const PIN_ICON = L.divIcon({
 </script>
 </body>
 </html>
-
-
-
 
 
