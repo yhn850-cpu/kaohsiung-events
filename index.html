@@ -1005,27 +1005,39 @@
 
     // ========= 4. 建立標記 =========
     locations.forEach((loc) => {
-      const marker = L.circleMarker([loc.lat, loc.lng], {
-        radius: 8,
-        fillColor: "#c9ada7",
-        fillOpacity: 0.9,
-        color: "#9a8c98",
-        weight: 2
-      }).addTo(map);
+     // 圖釘 icon：用 SVG（不用依賴 Leaflet 預設圖片，GitHub Pages 不會找不到圖）
+const PIN_ICON = L.divIcon({
+  className: "pin-icon",
+  html: `
+    <svg width="28" height="44" viewBox="0 0 28 44" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M14 43C14 43 3 28.7 3 18C3 10.8 8.1 5 14 5C19.9 5 25 10.8 25 18C25 28.7 14 43 14 43Z"
+            fill="#c9ada7" stroke="#9a8c98" stroke-width="2"/>
+      <circle cx="14" cy="18" r="6" fill="#f4f1ec" stroke="#9a8c98" stroke-width="2"/>
+    </svg>
+  `,
+  iconSize: [28, 44],
+  iconAnchor: [14, 44],
+  tooltipAnchor: [0, -34]
+});
 
-      marker.bindTooltip(`<span class="marker-label">${loc.name}</span>`, {
-        permanent: false,
-        direction: "top"
-      });
+// 只有被活動用到的地點才畫 marker
+const usedPlaceIds = new Set(EVENTS.flatMap(e => e.places));
 
-      marker.on("click", () => {
-        renderLocation(loc);
-      });
-    });
+PLACES.filter(p => usedPlaceIds.has(p.id)).forEach(p => {
+  const marker = L.marker([p.lat, p.lng], { icon: PIN_ICON }).addTo(map);
+  marker.bindTooltip(p.name, { direction: "top" });
+
+  marker.on("click", () => {
+    activePlace = p.id;
+    renderYearFilters();   // ★ 新增：地點切換後，年份選項重新計算
+    renderEvents();
+  });
+});
 
     // 預設選擇第一個地點
     renderLocation(locations[0]);
   </script>
 </body>
 </html>
+
 
