@@ -670,13 +670,26 @@ const PHOTO_SOURCES = {
         // 沒照片：保留 placeholder
         return;
       }
+container.innerHTML = urls.map(url => {
+  const normalizedPath = url.replace(/^\//, "");
 
-      container.innerHTML = urls.map(url=>{
-        const src = PHOTO_SOURCES[url] || url;
-        return `<button class="thumb thumb-btn" type="button" aria-label="放大圖片" data-img="${url}" data-src="${src}" style="background-image:url('${url}')"></button>`;
-      }).join("");
-    });
-  }
+  const sourceUrl =
+    PHOTO_SOURCES[normalizedPath] ||
+    PHOTO_SOURCES[url] ||
+    url;
+
+  return `
+    <button
+      class="thumb thumb-btn"
+      type="button"
+      aria-label="放大圖片"
+      data-img="${url}"
+      data-src="${sourceUrl}"
+      style="background-image:url('${url}')">
+    </button>
+  `;
+}).join("");
+
 
   // ========= 縮圖點擊：放大檢視（含來源網址） =========
   const lightboxEl = document.getElementById("lightbox");
@@ -772,6 +785,7 @@ const PIN_ICON = L.divIcon({
 </script>
 </body>
 </html>
+
 
 
 
