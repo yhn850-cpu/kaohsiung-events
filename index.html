@@ -347,7 +347,11 @@
       <aside class="sidebar">
         <div class="scope-title" id="scopeTitle">全部地點</div>
         <div class="scope-sub" id="scopeSub">目前顯示：全部年份 · 全部活動</div>
-
+        
+        <div class="row">
+          <span class="select-label">地點</span>
+          <select id="placeSelect" class="select" aria-label="選擇地點"></select>
+        </div>
         <div class="row" id="yearFilters"></div>
 
         <div class="row">
@@ -735,6 +739,7 @@ eventListEl.addEventListener("click", (e)=>{
 </script>
 </body>
 </html>
+
 
 
 
