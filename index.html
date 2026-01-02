@@ -722,6 +722,17 @@ eventListEl.addEventListener("click", (e)=>{
       closeLightbox();
     }
   });
+eventListEl.addEventListener("click", (e)=>{
+  const btn = e.target.closest(".thumb-btn");
+  if (!btn) return;
+
+  console.log("IMG:", btn.dataset.img, "SRC:", btn.dataset.src);
+
+  const imgUrl = btn.dataset.img;
+  const srcUrl = btn.dataset.src || btn.dataset.img;
+  if (!imgUrl) return;
+  openLightbox(imgUrl, srcUrl);
+});
 
   // ========= 地圖（圖釘標記） =========
   const map = L.map("map").setView([22.63, 120.30], 12);
@@ -772,6 +783,7 @@ eventListEl.addEventListener("click", (e)=>{
 </script>
 </body>
 </html>
+
 
 
 
