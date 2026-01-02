@@ -100,28 +100,6 @@
 
     .row{ margin-top:10px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
 
-    /* 地點下拉選單 */
-    .select-label{
-      font-size:12px;
-      color:#6b7280;
-      padding-left:2px;
-      min-width: 40px;
-    }
-    .select{
-      flex:1;
-      min-width: 180px;
-      font-size:12px;
-      padding:8px 10px;
-      border-radius:12px;
-      border:1px solid #c8b6a6;
-      background: rgba(244,241,236,0.9);
-      color:#1f2937;
-      outline:none;
-    }
-    .select:focus{
-      border-color:#9a8c98;
-      box-shadow:0 0 0 3px rgba(154,140,152,0.25);
-    }
 
     /* 縮圖按鈕（可點擊放大） */
     .thumb-btn{
@@ -372,10 +350,6 @@
         <div class="scope-sub" id="scopeSub">目前顯示：全部年份 · 全部活動</div>
 
         
-        <div class="row">
-          <span class="select-label">地點</span>
-          <select id="placeSelect" class="select" aria-label="選擇地點"></select>
-        </div>
 <div class="row" id="yearFilters"></div>
 
         <div class="row">
@@ -763,6 +737,7 @@ eventListEl.addEventListener("click", (e)=>{
 </script>
 </body>
 </html>
+
 
 
 
