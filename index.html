@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>高雄 · 陳其邁市長任內活動地圖（2020–2026/01/01）</title>
 
-  <!-- Leaflet --><!-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <style>
@@ -96,6 +97,117 @@
     }
 
     .row{ margin-top:10px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+
+    /* 地點下拉選單 */
+    .select-label{
+      font-size:12px;
+      color:#6b7280;
+      padding-left:2px;
+      min-width: 40px;
+    }
+    .select{
+      flex:1;
+      min-width: 180px;
+      font-size:12px;
+      padding:8px 10px;
+      border-radius:12px;
+      border:1px solid #c8b6a6;
+      background: rgba(244,241,236,0.9);
+      color:#1f2937;
+      outline:none;
+    }
+    .select:focus{
+      border-color:#9a8c98;
+      box-shadow:0 0 0 3px rgba(154,140,152,0.25);
+    }
+
+    /* 縮圖按鈕（可點擊放大） */
+    .thumb-btn{
+      appearance:none;
+      border:none;
+      padding:0;
+      cursor:pointer;
+      text-align:left;
+    }
+    .thumb-btn:focus-visible{
+      outline:3px solid rgba(185,87,86,0.45);
+      outline-offset:2px;
+    }
+
+    /* Lightbox 放大檢視 */
+    .lightbox{
+      position:fixed;
+      inset:0;
+      display:none;
+      z-index:9999;
+    }
+    .lightbox.open{ display:block; }
+    .lightbox-backdrop{
+      position:absolute;
+      inset:0;
+      background: rgba(15,15,15,0.72);
+      backdrop-filter: blur(2px);
+    }
+    .lightbox-panel{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform: translate(-50%,-50%);
+      width:min(92vw, 980px);
+      max-height: 88vh;
+      background: rgba(253,253,252,0.98);
+      border:1px solid rgba(200,182,166,0.9);
+      border-radius:18px;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.35);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+    }
+    .lightbox-close{
+      position:absolute;
+      right:10px;
+      top:10px;
+      width:34px;
+      height:34px;
+      border-radius:12px;
+      border:1px solid rgba(112,99,88,0.45);
+      background: rgba(244,241,236,0.95);
+      cursor:pointer;
+      font-size:18px;
+      line-height:1;
+      color:#403b33;
+    }
+    .lightbox-imgwrap{
+      padding:12px 12px 0;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      min-height: 220px;
+    }
+    .lightbox-panel img{
+      max-width:100%;
+      max-height: calc(88vh - 130px);
+      border-radius:14px;
+      border:1px solid rgba(148,133,121,0.35);
+      background: #f4f1ec;
+    }
+    .lightbox-meta{
+      padding:10px 14px 14px;
+      border-top:1px solid rgba(200,182,166,0.55);
+      background: linear-gradient(to bottom, rgba(244,241,236,0.95), rgba(227,213,202,0.9));
+      font-size:12px;
+      color:#403b33;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      word-break:break-all;
+    }
+    .lightbox-meta a{
+      color:#B95756;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
 
     /* 年份按鈕：清楚可讀、避免撞色 */
     .pill{
@@ -257,7 +369,12 @@
         <div class="scope-title" id="scopeTitle">全部地點</div>
         <div class="scope-sub" id="scopeSub">目前顯示：全部年份 · 全部活動</div>
 
-        <div class="row" id="yearFilters"></div>
+        
+        <div class="row">
+          <span class="select-label">地點</span>
+          <select id="placeSelect" class="select" aria-label="選擇地點"></select>
+        </div>
+<div class="row" id="yearFilters"></div>
 
         <div class="row">
           <button class="btn" id="clearPlace">清除地點篩選（回到全部）</button>
@@ -278,6 +395,23 @@
     </footer>
   </div>
 
+
+  <!-- Lightbox：點縮圖放大 + 顯示來源網址 -->
+  <div class="lightbox" id="lightbox" aria-hidden="true">
+    <div class="lightbox-backdrop" id="lightboxBackdrop" data-close="1"></div>
+    <div class="lightbox-panel" role="dialog" aria-modal="true" aria-label="圖片放大檢視">
+      <button class="lightbox-close" id="lightboxClose" aria-label="關閉">✕</button>
+      <div class="lightbox-imgwrap">
+        <img id="lightboxImg" alt="放大圖片"/>
+      </div>
+      <div class="lightbox-meta">
+        <div><b>圖片路徑：</b><span class="mono" id="lightboxPath"></span></div>
+        <div><b>來源網址：</b><a id="lightboxSrc" href="#" target="_blank" rel="noopener noreferrer"></a></div>
+      </div>
+    </div>
+  </div>
+
+
 <script>
   // ========= 地點（地圖上每個地點一個圖釘） =========
   const PLACES = [
@@ -289,7 +423,6 @@
     { id:"kaohsiung_harbor", name:"高雄港灣 / 港區", lat:22.6130, lng:120.2850 },
     { id:"love_river", name:"愛河", lat:22.6305, lng:120.2955 },
     { id:"weiwuying", name:"衛武營", lat:22.6255, lng:120.3452 },
-    { id:"art_museum", name:"高雄市立美術館", lat:22.6574, lng:120.2867 },
     { id:"nknu", name:"高師大（高雄師範大學）", lat:22.6276, lng:120.3320 },
     { id:"dream_mall", name:"夢時代 / 時代大道", lat:22.59515, lng:120.30692 },
     { id:"lotus_lake", name:"左營蓮池潭", lat:22.6842, lng:120.2975 },
@@ -301,12 +434,6 @@
     { id:"central_park", name:"中央公園", lat:22.6246, lng:120.3006 },
     { id:"city_hall", name:"高雄市政府（四維行政中心）", lat:22.6230, lng:120.3140 },
     { id:"science_museum", name:"國立科工館", lat:22.6399, lng:120.3248 },
-    { id:"fengshan_admin", name:"鳳山行政中心", lat:22.6267, lng:120.3530 },
-    { id:"far_eastern_ks", name:"高雄大遠百廣場", lat:22.6131, lng:120.3046 },
-    { id:"neimen_shunxian", name:"內門順賢宮", lat:22.9396, lng:120.4682 },
-    { id:"gangshan", name:"岡山", lat:22.7960, lng:120.2956 },
-    { id:"shoushan_zoo", name:"壽山動物園", lat:22.6455, lng:120.2649 },
-    { id:"hamasen", name:"哈瑪星", lat:22.6188, lng:120.2727 },
   ];
   const placeById = Object.fromEntries(PLACES.map(p => [p.id, p]));
 
@@ -315,33 +442,23 @@
     { id:"2020-10-meinong-hakka-trip", year:2020, month:10, monthLabel:"10月", name:"好客旅遊去", kind:"民俗文化", places:["meinong"] },
     { id:"2020-12-newyear-cross-lightyears", year:2020, month:12, monthLabel:"12月", name:"跨百光年跨年晚會", kind:"節慶（市長首場）", places:["love_river_bay","kmc","penglai"] },
 
-    { id:"2021-01-cross-lightyears-continued", year:2021, month:1, monthLabel:"01月", name:"跨百光年（跨年活動延續）", kind:"節慶", places:["love_river_bay"] },
     { id:"2021-03-megaport-restart", year:2021, month:3, monthLabel:"03月", name:"大港開唱（復辦首年）", kind:"音樂祭", places:["pier2"] },
-    { id:"2021-04-friedchicken-festival-1st", year:2021, month:4, monthLabel:"04月", name:"第一屆高雄鹹酥雞嘉年華", kind:"美食節", places:["fengshan_admin"] },
     { id:"2021-05-ocean-party", year:2021, month:5, monthLabel:"05月", name:"高雄海洋派對", kind:"水域休閒", places:["love_river_bay"] },
     { id:"2021-10-national-day-fireworks", year:2021, month:10, monthLabel:"10月", name:"國慶煙火在高雄", kind:"國家慶典", places:["kaohsiung_harbor"] },
     { id:"2021-11-dragonboat-carnival", year:2021, month:11, monthLabel:"11月", name:"國慶龍舟嘉年華", kind:"運動賽事", places:["love_river"] },
     { id:"2021-12-newyear-2022-dual-stage", year:2021, month:12, monthLabel:"12月", name:"2022 高雄跨年（雙舞台）", kind:"節慶晚會", places:["kmc","penglai"] },
 
-    { id:"2022-01-lantern-festival-prelight", year:2022, month:1, monthLabel:"01月", name:"2022 台灣燈會（會前發光）", kind:"國際級節慶", places:["love_river_bay","weiwuying"] },
     { id:"2022-02-taiwan-lantern-festival", year:2022, month:2, monthLabel:"02月", name:"2022 台灣燈會（雙主場）", kind:"國際級節慶", places:["weiwuying","love_river_bay"] },
-    { id:"2022-03-ksaf", year:2022, month:3, monthLabel:"03月", name:"高雄春天藝術節（KSAF）", kind:"藝文盛會", places:["weiwuying","art_museum"] },
-    { id:"2022-04-neimen-songjiang", year:2022, month:4, monthLabel:"04月", name:"內門宋江陣（復辦）", kind:"民俗文化", places:["neimen_shunxian"] },
-    { id:"2022-07-qijin-black-sand", year:2022, month:7, monthLabel:"07月", name:"旗津黑沙玩藝節", kind:"夏季觀光", places:["qijin"] },
-    { id:"2022-08-national-friedchicken", year:2022, month:8, monthLabel:"08月", name:"全國鹹酥雞嘉年華", kind:"美食推廣", places:["far_eastern_ks"] },
+    { id:"2022-03-ksaf", year:2022, month:3, monthLabel:"03月", name:"高雄春天藝術節（KSAF）", kind:"藝文盛會", places:["weiwuying","nknu"] },
     { id:"2022-08-creativexpo-floating", year:2022, month:8, monthLabel:"08月", name:"台灣文博會（聊療漂漂河）", kind:"藝文 IP", places:["love_river_bay","kmc"] },
     { id:"2022-10-design-expo", year:2022, month:10, monthLabel:"10月", name:"台灣設計展（設計中島）", kind:"藝文設計", places:["penglai"] },
     { id:"2022-10-takao-rock", year:2022, month:10, monthLabel:"10月", name:"Takao Rock 打狗祭", kind:"音樂祭", places:["kmc"] },
-    { id:"2022-11-gangshan-mutton", year:2022, month:11, monthLabel:"11月", name:"岡山羊肉文化節", kind:"產業推廣", places:["gangshan"] },
-    { id:"2022-12-shoushan-zoo-reopen", year:2022, month:12, monthLabel:"12月", name:"壽山動物園新開園", kind:"親子觀光", places:["shoushan_zoo"] },
     { id:"2022-12-newyear-2023-yawan", year:2022, month:12, monthLabel:"12月", name:"2023 跨年亞灣未來市", kind:"節慶晚會", places:["dream_mall"] },
 
     { id:"2023-01-lotus-lake-lantern", year:2023, month:1, monthLabel:"01月", name:"蓮潭燈會（萌兔）", kind:"節慶（首度移師）", places:["lotus_lake"] },
     { id:"2023-02-westlife-bsb", year:2023, month:2, monthLabel:"02月", name:"Westlife & Backstreet Boys", kind:"國際演唱會", places:["arena","world_games"] },
     { id:"2023-03-blackpink-born-pink", year:2023, month:3, monthLabel:"03月", name:"BLACKPINK［BORN PINK］", kind:"國際演唱會", places:["world_games"] },
     { id:"2023-04-a-mei-and-megaport", year:2023, month:4, monthLabel:"04月", name:"張惠妹 ASMR / 大港開唱", kind:"音樂慶典", places:["arena","pier2"] },
-    { id:"2023-05-love-river-dragonboat", year:2023, month:5, monthLabel:"05月", name:"愛河端午龍舟賽（復辦）", kind:"體育競技", places:["love_river"] },
-    { id:"2023-07-ocean-party", year:2023, month:7, monthLabel:"07月", name:"高雄海洋派對", kind:"夏季觀光", places:["love_river_bay"] },
     { id:"2023-08-qijin-kite", year:2023, month:8, monthLabel:"08月", name:"旗津風箏節", kind:"親子觀光", places:["qijin"] },
     { id:"2023-10-green-knights-show", year:2023, month:10, monthLabel:"10月", name:"翡翠騎士（日農二高）展演", kind:"國際交流", places:["pier7"] },
     { id:"2023-11-coldplay", year:2023, month:11, monthLabel:"11月", name:"Coldplay 酷玩樂團", kind:"國際演唱會", places:["world_games"] },
@@ -352,7 +469,6 @@
     { id:"2024-03-sakura-mayday", year:2024, month:3, monthLabel:"03月", name:"高雄櫻花季 / 五月天", kind:"音樂祭 / 演唱會", places:["dream_mall","world_games"] },
     { id:"2024-04-golden-wave", year:2024, month:4, monthLabel:"04月", name:"Golden Wave in Taiwan", kind:"韓流拼盤", places:["world_games"] },
     { id:"2024-07-beer-festival", year:2024, month:7, monthLabel:"07月", name:"高雄啤酒音樂節", kind:"商業祭典", places:["dream_mall"] },
-    { id:"2024-08-hamasen-ice", year:2024, month:8, monthLabel:"08月", name:"大港閱冰（吃冰節）", kind:"美食推廣", places:["hamasen"] },
     { id:"2024-09-bruno-mars", year:2024, month:9, monthLabel:"09月", name:"Bruno Mars 火星人布魯諾", kind:"國際演唱會", places:["world_games"] },
     { id:"2024-09-one-ok-rock", year:2024, month:9, monthLabel:"09月", name:"ONE OK ROCK 演唱會", kind:"國際演唱會", places:["world_games"] },
     { id:"2024-10-orange-devils-greenknights", year:2024, month:10, monthLabel:"10月", name:"橘色惡魔、翡翠騎士回訪", kind:"國際交流", places:["kaohsiung_harbor"] },
@@ -368,7 +484,6 @@
     { id:"2025-02-winter-chiikawa", year:2025, month:2, monthLabel:"02月", name:"冬日遊樂園（吉伊卡哇）", kind:"療癒 IP 展", places:["pier2","love_river_bay"] },
     { id:"2025-03-megaport-sakura", year:2025, month:3, monthLabel:"03月", name:"2025 大港開唱 / 櫻花季", kind:"音樂祭", places:["pier2","dream_mall"] },
     { id:"2025-08-qijin-summer", year:2025, month:8, monthLabel:"08月", name:"旗津風箏節暨氣墊水樂園", kind:"暑假活動", places:["qijin"] },
-    { id:"2025-10-giant-pumpkin-2", year:2025, month:10, monthLabel:"10月", name:"高雄萬聖節：巨型南瓜 2.0", kind:"節慶活動", places:["aozihdi"] },
     { id:"2025-10-takao-rock-2025", year:2025, month:10, monthLabel:"10月", name:"2025 打狗祭", kind:"音樂祭", places:["kmc"] },
     { id:"2025-11-doraemon", year:2025, month:11, monthLabel:"11月", name:"100% 哆啦A夢特展", kind:"IP 特展", places:["science_museum"] },
     { id:"2025-12-newyear-2026", year:2025, month:12, monthLabel:"12月", name:"2026 跨年晚會「雄嗨趴」", kind:"節慶晚會", places:["dream_mall"] },
@@ -386,6 +501,19 @@
   const yearFiltersEl= document.getElementById("yearFilters");
   const eventListEl  = document.getElementById("eventList");
 
+  const placeSelectEl = document.getElementById("placeSelect");
+
+  // =========（可選）圖片來源網址對照表 =========
+  // 如果你擔心「偷圖」爭議，可以把每張圖片的原始來源網址填在這裡。
+  // key：圖片在網站上的路徑（例如 "images/2026/2026-01-newyear-dawn/01.jpg"）
+  // value：原始來源網址（例如 "https://example.com/original-post"）
+ const PHOTO_SOURCES = {
+  "images/2026/2026-01-newyear-dawn/01.jpg": "https://taidaily.com/2026/01/01/563572/",
+  "images/2026/2026-01-newyear-dawn/02.jpg": "https://taidaily.com/2026/01/01/563572/",
+  "images/2026/2026-01-newyear-dawn/03.jpg": "https://taidaily.com/2026/01/01/563572/",
+  "images/2026/2026-01-newyear-dawn/04.jpg": "https://taidaily.com/2026/01/01/563572/",
+};
+
   // ========= 年份：依地點動態產生（你要求：某地點某年沒活動就不顯示該年） =========
   function getAvailableYears(){
     let list = EVENTS;
@@ -397,6 +525,28 @@
     if (activeYear !== "all" && !years.includes(Number(activeYear))){
       activeYear = "all";
     }
+
+  // ========= 地點下拉選單（避免一次顯示太多地點造成頁面變長） =========
+  function getUsedPlaces(){
+    const used = new Set(EVENTS.flatMap(e => e.places));
+    return PLACES.filter(p => used.has(p.id))
+      .sort((a,b)=> a.name.localeCompare(b.name, "zh-Hant"));
+  }
+
+  function renderPlaceSelect(){
+    const opts = [{id:"all", name:"全部地點"}, ...getUsedPlaces()];
+    placeSelectEl.innerHTML = opts.map(p=>{
+      const selected = (p.id === activePlace) ? "selected" : "";
+      return `<option value="${p.id}" ${selected}>${p.name}</option>`;
+    }).join("");
+  }
+
+  placeSelectEl.addEventListener("change", ()=>{
+    activePlace = placeSelectEl.value || "all";
+    renderYearFilters();
+    renderEvents();
+  });
+
   }
   function renderYearFilters(){
     ensureActiveYearValid();
@@ -519,10 +669,55 @@
       }
 
       container.innerHTML = urls.map(url=>{
-        return `<div class="thumb" style="background-image:url('${url}')"></div>`;
+        const src = PHOTO_SOURCES[url] || url;
+        return `<button class="thumb thumb-btn" type="button" aria-label="放大圖片" data-img="${url}" data-src="${src}" style="background-image:url('${url}')"></button>`;
       }).join("");
     });
   }
+
+  // ========= 縮圖點擊：放大檢視（含來源網址） =========
+  const lightboxEl = document.getElementById("lightbox");
+  const lightboxImg = document.getElementById("lightboxImg");
+  const lightboxPath = document.getElementById("lightboxPath");
+  const lightboxSrc = document.getElementById("lightboxSrc");
+  const lightboxClose = document.getElementById("lightboxClose");
+  const lightboxBackdrop = document.getElementById("lightboxBackdrop");
+
+  function openLightbox(imgUrl, srcUrl){
+    lightboxImg.src = imgUrl;
+    lightboxPath.textContent = imgUrl;
+    lightboxSrc.textContent = srcUrl || imgUrl;
+    lightboxSrc.href = srcUrl || imgUrl;
+
+    lightboxEl.classList.add("open");
+    lightboxEl.setAttribute("aria-hidden","false");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeLightbox(){
+    lightboxEl.classList.remove("open");
+    lightboxEl.setAttribute("aria-hidden","true");
+    document.body.style.overflow = "";
+    lightboxImg.src = "";
+  }
+
+  // 用事件委派，避免每次重繪都綁一堆 listener
+  eventListEl.addEventListener("click", (e)=>{
+    const btn = e.target.closest(".thumb-btn");
+    if (!btn) return;
+    const imgUrl = btn.dataset.img;
+    const srcUrl = btn.dataset.src;
+    if (!imgUrl) return;
+    openLightbox(imgUrl, srcUrl);
+  });
+
+  lightboxClose.addEventListener("click", closeLightbox);
+  lightboxBackdrop.addEventListener("click", closeLightbox);
+  document.addEventListener("keydown", (e)=>{
+    if (e.key === "Escape" && lightboxEl.classList.contains("open")){
+      closeLightbox();
+    }
+  });
 
   // ========= 地圖（圖釘標記） =========
   const map = L.map("map").setView([22.63, 120.30], 12);
@@ -536,8 +731,8 @@
     html: `
       <svg width="28" height="44" viewBox="0 0 28 44" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <path d="M14 43C14 43 3 28.7 3 18C3 10.8 8.1 5 14 5C19.9 5 25 10.8 25 18C25 28.7 14 43 14 43Z"
-              fill="#B95756" stroke="#8F4A49" stroke-width="2"/>
-        <circle cx="14" cy="18" r="6" fill="#f4f1ec" stroke="#8F4A49" stroke-width="2"/>
+              fill="#c9ada7" stroke="#9a8c98" stroke-width="2"/>
+        <circle cx="14" cy="18" r="6" fill="#f4f1ec" stroke="#9a8c98" stroke-width="2"/>
       </svg>
     `,
     iconSize: [28, 44],
@@ -553,6 +748,7 @@
 
     marker.on("click", ()=>{
       activePlace = p.id;
+      placeSelectEl.value = p.id;
       renderYearFilters(); // ★ 地點切換後：年份選項動態更新（只留有活動的年份）
       renderEvents();
     });
@@ -560,15 +756,16 @@
 
   document.getElementById("clearPlace").addEventListener("click", ()=>{
     activePlace = "all";
+    placeSelectEl.value = "all";
     renderYearFilters();
     renderEvents();
   });
 
   // init
+  renderPlaceSelect();
   renderYearFilters();
   renderEvents();
 </script>
 </body>
 </html>
-
 
