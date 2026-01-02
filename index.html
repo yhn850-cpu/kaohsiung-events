@@ -703,15 +703,17 @@
     lightboxImg.src = "";
   }
 
-  // 用事件委派，避免每次重繪都綁一堆 listener
-  eventListEl.addEventListener("click", (e)=>{
-    const btn = e.target.closest(".thumb-btn");
-    if (!btn) return;
-    const imgUrl = btn.dataset.img;
-    const srcUrl = btn.dataset.src;
-    if (!imgUrl) return;
-    openLightbox(imgUrl, srcUrl);
-  });
+// 用事件委派，避免每次重繪都綁一堆 listener
+eventListEl.addEventListener("click", (e)=>{
+  const btn = e.target.closest(".thumb-btn");
+  if (!btn) return;
+
+  const imgUrl = btn.dataset.img;
+  const srcUrl = btn.dataset.src || btn.dataset.img;
+
+  if (!imgUrl) return;
+  openLightbox(imgUrl, srcUrl);
+});
 
   lightboxClose.addEventListener("click", closeLightbox);
   lightboxBackdrop.addEventListener("click", closeLightbox);
@@ -770,6 +772,7 @@
 </script>
 </body>
 </html>
+
 
 
 
