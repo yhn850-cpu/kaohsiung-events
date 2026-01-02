@@ -529,13 +529,7 @@
     }
 
   // ========= 地點下拉選單（避免一次顯示太多地點造成頁面變長） =========
-  placeSelectEl.addEventListener("change", ()=>{
-    activePlace = placeSelectEl.value || "all";
-    renderYearFilters();
-    renderEvents();
-  });
-
-  }
+ }
   function renderYearFilters(){
     ensureActiveYearValid();
     const years = getAvailableYears();
@@ -769,6 +763,7 @@ eventListEl.addEventListener("click", (e)=>{
 </script>
 </body>
 </html>
+
 
 
 
