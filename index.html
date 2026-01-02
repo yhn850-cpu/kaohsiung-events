@@ -529,20 +529,6 @@
     }
 
   // ========= 地點下拉選單（避免一次顯示太多地點造成頁面變長） =========
-  function getUsedPlaces(){
-    const used = new Set(EVENTS.flatMap(e => e.places));
-    return PLACES.filter(p => used.has(p.id))
-      .sort((a,b)=> a.name.localeCompare(b.name, "zh-Hant"));
-  }
-
-  function renderPlaceSelect(){
-    const opts = [{id:"all", name:"全部地點"}, ...getUsedPlaces()];
-    placeSelectEl.innerHTML = opts.map(p=>{
-      const selected = (p.id === activePlace) ? "selected" : "";
-      return `<option value="${p.id}" ${selected}>${p.name}</option>`;
-    }).join("");
-  }
-
   placeSelectEl.addEventListener("change", ()=>{
     activePlace = placeSelectEl.value || "all";
     renderYearFilters();
@@ -783,6 +769,7 @@ eventListEl.addEventListener("click", (e)=>{
 </script>
 </body>
 </html>
+
 
 
 
