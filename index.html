@@ -927,26 +927,27 @@ function ensureActiveYearValid() {
     const yearFiltersEl = document.getElementById("yearFilters");
 
     // ========= 2. 年份篩選 pill =========
-    function renderYearFilters() {
-      const years = ["all", ...allYears];
-      yearFiltersEl.innerHTML = years
-        .map((y) => {
-          const label = y === "all" ? "全部年份" : `${y}`;
-          const activeClass = y === activeYear ? "pill active" : "pill";
-          return `<button class="${activeClass}" data-year="${y}">${label}</button>`;
-        })
-        .join("");
+function renderYearFilters() {
+  ensureActiveYearValid();
 
-      yearFiltersEl.querySelectorAll("button").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          activeYear = btn.dataset.year;
-          renderYearFilters();
-          if (activeLocation) renderLocation(activeLocation);
-        });
-      });
-    }
+  const years = getAvailableYears();
+  const yearButtons = ["all", ...years];
 
-    renderYearFilters();
+  yearFiltersEl.innerHTML = yearButtons.map(y => {
+    const label = y === "all" ? "全部年份" : String(y);
+    const cls = (String(y) === String(activeYear)) ? "pill active" : "pill";
+    return `<button class="${cls}" data-year="${y}">${label}</button>`;
+  }).join("");
+
+  yearFiltersEl.querySelectorAll("button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      activeYear = btn.dataset.year;
+      renderYearFilters();
+      renderEvents();
+    });
+  });
+}
+
 
     // ========= 3. 初始化地圖 =========
     const map = L.map("map").setView([22.63, 120.30], 12);
@@ -1054,6 +1055,7 @@ PLACES.filter(p => usedPlaceIds.has(p.id)).forEach(p => {
   </script>
 </body>
 </html>
+
 
 
 
